@@ -125,30 +125,12 @@
       </table>
     </div>
 
-    <div class="pagination">
-      <button @click="changePage(1)" :disabled="queryParams.pageNo === 1">
-        首页
-      </button>
-      <button
-        @click="changePage(queryParams.pageNo - 1)"
-        :disabled="queryParams.pageNo === 1"
-      >
-        上一页
-      </button>
-      <span>第 {{ queryParams.pageNo }} 页 / 共 {{ pages }} 页</span>
-      <button
-        @click="changePage(queryParams.pageNo + 1)"
-        :disabled="queryParams.pageNo >= pages"
-      >
-        下一页
-      </button>
-      <button
-        @click="changePage(pages)"
-        :disabled="queryParams.pageNo >= pages"
-      >
-        尾页
-      </button>
-    </div>
+    <Pagination
+      v-model:current-page="queryParams.pageNo"
+      v-model:page-size="queryParams.pageSize"
+      :total="total"
+      @change="handlePageChange"
+    />
 
     <div v-if="showModal" class="modal">
       <div class="modal-content">
@@ -290,6 +272,7 @@
 import { ref, reactive, onMounted, onUnmounted } from "vue";
 import axios from "axios";
 import { getCurrentInstance } from "vue";
+import Pagination from "@/components/Pagination.vue";
 const { proxy } = getCurrentInstance();
 
 const queryParams = reactive({
@@ -536,9 +519,9 @@ function doSearch() {
   getList();
 }
 
-function changePage(p) {
-  if (p === queryParams.pageNo) return;
-  queryParams.pageNo = p;
+function handlePageChange({ pageNo, pageSize }) {
+  queryParams.pageNo = pageNo;
+  queryParams.pageSize = pageSize;
   getList();
 }
 
@@ -684,24 +667,7 @@ td {
 tbody tr:hover {
   background: #fafafa;
 }
-.pagination {
-  margin-top: 16px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-.pagination button {
-  padding: 5px 10px;
-  border: 1px solid #dcdcdc;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.pagination button:disabled {
-  color: #999;
-  cursor: not-allowed;
-}
+
 
 .modal {
   position: fixed;

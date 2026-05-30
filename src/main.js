@@ -8,11 +8,12 @@ import "./assets/css/global.css";
 // 🔥 在这里加入 Element Plus
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
+import zhCn from "element-plus/dist/locale/zh-cn.mjs";
 
 const app = createApp(App);
 
-// 🔥 注册 Element Plus
-app.use(ElementPlus);
+// 🔥 注册 Element Plus 并设置中文语言
+app.use(ElementPlus, { locale: zhCn });
 
 // ====================
 // 全局 axios 配置（核心！）

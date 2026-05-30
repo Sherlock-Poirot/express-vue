@@ -79,21 +79,13 @@
       </div>
 
       <!-- 分页 -->
-      <div class="pagination" v-if="total > 0">
-        <button :disabled="pageNo === 1" @click="pageNo--" class="pager-btn">
-          上一页
-        </button>
-        <span class="pager-info"
-          >第 {{ pageNo }} 页 / 共 {{ totalPages }} 页</span
-        >
-        <button
-          :disabled="pageNo >= totalPages"
-          @click="pageNo++"
-          class="pager-btn"
-        >
-          下一页
-        </button>
-      </div>
+    <Pagination
+      v-model:current-page="pageNo"
+      v-model:page-size="pageSize"
+      :total="total"
+      @change="handlePageChange"
+      v-if="total > 0"
+    />
     </div>
   </div>
 </template>
@@ -102,6 +94,7 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
+import Pagination from "@/components/Pagination.vue";
 
 const query = reactive({
   staffName: "",
@@ -174,6 +167,12 @@ function resetQuery() {
   query.staffName = "";
   query.phone = "";
   pageNo.value = 1;
+  getList();
+}
+
+function handlePageChange({ pageNo: newPageNo, pageSize: newPageSize }) {
+  pageNo.value = newPageNo;
+  pageSize.value = newPageSize;
   getList();
 }
 
@@ -334,40 +333,5 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 20px;
-  gap: 10px;
-  border-top: 1px solid #ebeef5;
-  background: #fff;
-}
 
-.pager-btn {
-  padding: 8px 15px;
-  border: 1px solid #dcdfe6;
-  background: #fff;
-  color: #606266;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-.pager-btn:hover {
-  color: #409eff;
-  border-color: #c6e2ff;
-}
-.pager-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.pager-btn:not(:disabled):hover {
-  background-color: #f5f7fa;
-}
-.pager-info {
-  color: #606266;
-  font-size: 14px;
-  margin: 0 10px;
-}
 </style>

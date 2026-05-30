@@ -109,6 +109,15 @@
       </table>
     </div>
 
+    <!-- 分页 -->
+    <Pagination
+      v-model:current-page="query.pageNo"
+      v-model:page-size="query.pageSize"
+      :total="total"
+      @change="handlePageChange"
+      v-if="total > 0"
+    />
+
     <!-- 导入Excel 弹窗 -->
     <div class="modal" v-if="importVisible" @click.self="closeImport">
       <div class="modal-content">
@@ -134,9 +143,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onUnmounted } from "vue";
+import { ref, reactive, onMounted, onUnmounted } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
+import Pagination from "@/components/Pagination.vue";
 
 const query = reactive({
   dimension: "time",
@@ -148,6 +158,7 @@ const query = reactive({
 });
 
 const tableData = ref([]);
+const total = ref(0);
 const importVisible = ref(false);
 const fileRef = ref(null);
 const importing = ref(false);
@@ -155,13 +166,36 @@ const importing = ref(false);
 let pollTimer = null;
 const POLL_INTERVAL = 3000; // 调整为3秒轮询一次，体验更好
 
-function doSearch() {
-  console.log("搜索", query);
+async function doSearch() {
+  query.pageNo = 1;
+  await getList();
 }
 
-function switchTab(type) {
+async function switchTab(type) {
   query.billType = type;
-  doSearch();
+  await doSearch();
+}
+
+async function getList() {
+  try {
+    // 这里替换为实际的接口地址
+    const res = await axios.get("/api/bill/search", { params: query });
+    if (res.data.code === 200) {
+      tableData.value = res.data.data.records || [];
+      total.value = res.data.data.total || 0;
+    } else {
+      ElMessage.error(res.data.message || "查询失败");
+    }
+  } catch (err) {
+    console.error("请求错误:", err);
+    ElMessage.error("网络错误或服务异常");
+  }
+}
+
+function handlePageChange({ pageNo, pageSize }) {
+  query.pageNo = pageNo;
+  query.pageSize = pageSize;
+  getList();
 }
 
 function openImport() {
@@ -231,6 +265,10 @@ function startPollTask(taskNo) {
     }
   }, POLL_INTERVAL);
 }
+
+onMounted(() => {
+  getList();
+});
 
 onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer);

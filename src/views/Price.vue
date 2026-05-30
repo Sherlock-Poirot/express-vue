@@ -72,8 +72,16 @@
           <td>{{ item.type || "-" }}</td>
 
           <!-- 备注：固定宽度 + 超出省略 + 悬浮显示全部 -->
-          <td class="remark-ellipsis" :title="item.remark || ''">
-            {{ item.remark || "-" }}
+          <td class="remark-ellipsis" 
+              @mouseenter="showTooltip($event, item.remark)"
+              @mouseleave="hideTooltip">
+            <span class="remark-text">{{ item.remark || "-" }}</span>
+            <div v-if="tooltipVisible && currentRemark === item.remark" 
+                 class="custom-tooltip"
+                 :style="tooltipStyle">
+              <div class="tooltip-content">{{ item.remark }}</div>
+              <div class="tooltip-arrow"></div>
+            </div>
           </td>
 
           <td>
@@ -95,30 +103,12 @@
     </table>
 
     <!-- 分页 -->
-    <div class="pagination">
-      <button @click="changePage(1)" :disabled="queryParams.pageNo === 1">
-        首页
-      </button>
-      <button
-        @click="changePage(queryParams.pageNo - 1)"
-        :disabled="queryParams.pageNo === 1"
-      >
-        上一页
-      </button>
-      <span>第 {{ queryParams.pageNo }} 页 / 共 {{ pages }} 页</span>
-      <button
-        @click="changePage(queryParams.pageNo + 1)"
-        :disabled="queryParams.pageNo >= pages"
-      >
-        下一页
-      </button>
-      <button
-        @click="changePage(pages)"
-        :disabled="queryParams.pageNo >= pages"
-      >
-        尾页
-      </button>
-    </div>
+    <Pagination
+      v-model:current-page="queryParams.pageNo"
+      v-model:page-size="queryParams.pageSize"
+      :total="total"
+      @change="handlePageChange"
+    />
 
     <!-- 价格详情弹窗 -->
     <div class="modal" v-if="showModal" @click.self="closeModal">
@@ -581,6 +571,7 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, computed } from "vue";
 import axios from "axios";
+import Pagination from "@/components/Pagination.vue";
 
 // 区域备注（你后端新加的字段）
 const areaRemarkList = ref([]);
@@ -602,6 +593,31 @@ const tableData = ref([]);
 // 批量选择
 const checkedIds = ref([]);
 const allChecked = ref(false);
+
+// Tooltip 相关
+const tooltipVisible = ref(false);
+const currentRemark = ref("");
+const tooltipStyle = ref({
+  top: "0px",
+  left: "0px"
+});
+
+function showTooltip(event, remark) {
+  if (!remark) return;
+  currentRemark.value = remark;
+  
+  const rect = event.target.getBoundingClientRect();
+  tooltipStyle.value = {
+    top: (rect.bottom + 8) + "px",
+    left: rect.left + "px"
+  };
+  tooltipVisible.value = true;
+}
+
+function hideTooltip() {
+  tooltipVisible.value = false;
+  currentRemark.value = "";
+}
 
 // 全选
 function checkAll() {
@@ -687,9 +703,9 @@ async function getList() {
 }
 
 // 切换分页
-function changePage(p) {
-  if (p === queryParams.pageNo) return;
-  queryParams.pageNo = p;
+function handlePageChange({ pageNo, pageSize }) {
+  queryParams.pageNo = pageNo;
+  queryParams.pageSize = pageSize;
   getList();
 }
 
@@ -1415,29 +1431,63 @@ td {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
 }
 
-/* 分页 ==================== */
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  width: 100%;
+.remark-text {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.pagination button {
-  padding: 8px 16px;
-  border: 1px solid #dcdfe6;
-  background: #fff;
-  border-radius: 6px;
-  cursor: pointer;
+
+/* 自定义 Tooltip 样式 */
+.custom-tooltip {
+  position: fixed;
+  z-index: 10000;
+  max-width: 400px;
+  min-width: 150px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4),
+              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  backdrop-filter: blur(10px);
+  animation: tooltipFadeIn 0.2s ease-out;
 }
-.pagination button:disabled {
-  color: #ccc;
-  cursor: not-allowed;
+
+.tooltip-content {
+  font-size: 14px;
+  line-height: 1.6;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
+
+.tooltip-arrow {
+  position: absolute;
+  top: -6px;
+  left: 20px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
 
 /* 弹窗遮罩 */
 .modal {
