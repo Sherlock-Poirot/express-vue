@@ -1,0 +1,41 @@
+/* 全局基础样式 */
+* {
+  box-sizing: border-box;
+}
+
+/* 👇 只对【你的客户价格页面】做手机适配，不碰侧边栏！ */
+@media (max-width: 768px) {
+  /* 仅修复页面内表格 */
+  .price-management-page table {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+  }
+
+  /* 仅修复页面内搜索框 */
+  .price-management-page .search-box {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  /* 仅修复页面内弹窗 */
+  .price-management-page .modal-content {
+    width: 95% !important;
+    max-width: 100% !important;
+    max-height: 90vh !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+  }
+
+  /* 仅修复页面内表单 */
+  .price-management-page .edit-grid-form {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* 仅修复页面内分页 */
+  .price-management-page .pagination {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+}
