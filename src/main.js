@@ -20,6 +20,10 @@ app.use(ElementPlus, { locale: zhCn });
 // ====================
 axios.interceptors.response.use(
   (res) => {
+    // 如果是 blob 类型的响应，直接返回，不做 code 检查
+    if (res.config.responseType === 'blob') {
+      return res;
+    }
     if (res.data.code !== 200) {
       $msg.error(res.data.message || "操作失败");
       return Promise.reject(res.data.message);
@@ -27,6 +31,10 @@ axios.interceptors.response.use(
     return res;
   },
   (err) => {
+    // 如果是 blob 类型的请求错误，需要特殊处理
+    if (err.config && err.config.responseType === 'blob') {
+      return Promise.reject(err);
+    }
     const msg = err?.response?.data?.message || err.message || "服务异常";
     $msg.error(msg);
     return Promise.reject(msg);

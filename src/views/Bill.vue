@@ -41,6 +41,9 @@
       <button class="search-btn" @click="doGenerateSummary">
         生成汇总账单
       </button>
+      <button class="search-btn" @click="doExportSummary">
+        汇总导出
+      </button>
     </div>
 
     <!-- TAB 切换：直营 / 承包区 / 业务员 -->
@@ -339,6 +342,44 @@ function doCalculate() {
 
 function doGenerateSummary() {
   console.log("生成汇总");
+}
+
+async function doExportSummary() {
+  if (!query.billMonth) {
+    ElMessage.warning("请先选择账单月份");
+    return;
+  }
+  try {
+    const response = await axios.get("/api/monthlyBill/export", {
+      params: { billMonth: query.billMonth },
+      responseType: "blob",
+    });
+    
+    // 检查返回的是不是错误（当后端返回错误时，返回的blob可能是JSON字符串）
+    if (response.data.type === 'application/json') {
+      const text = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsText(response.data);
+      });
+      const errorData = JSON.parse(text);
+      ElMessage.error(errorData.message || "导出失败");
+      return;
+    }
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${query.billMonth}月账单汇总.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url); // 清理资源
+    ElMessage.success("导出成功");
+  } catch (err) {
+    console.error("导出失败", err);
+    ElMessage.error("导出失败，请稍后重试");
+  }
 }
 
 function openEdit(row) {
