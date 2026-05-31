@@ -74,9 +74,27 @@
         <thead>
           <tr>
             <th>账单日期</th>
-            <th>客户名称</th>
-            <th>收件量</th>
-            <th>应收金额</th>
+            <th class="sortable" @click="handleSort('custName')">
+              客户名称
+              <span class="sort-icon" v-if="query.sortField !== 'custName'">⇅</span>
+              <span class="sort-icon active" v-else>
+                {{ query.sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th class="sortable" @click="handleSort('receiveCount')">
+              收件量
+              <span class="sort-icon" v-if="query.sortField !== 'receiveCount'">⇅</span>
+              <span class="sort-icon active" v-else>
+                {{ query.sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th class="sortable" @click="handleSort('receivableAmount')">
+              应收金额
+              <span class="sort-icon" v-if="query.sortField !== 'receivableAmount'">⇅</span>
+              <span class="sort-icon active" v-else>
+                {{ query.sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
             <th>调整金额</th>
             <th>特殊备注</th>
             <th>转账方式</th>
@@ -155,6 +173,8 @@ const query = reactive({
   billType: 1,
   pageNo: 1,
   pageSize: 10,
+  sortField: "",
+  sortOrder: "",
 });
 
 const tableData = ref([]);
@@ -178,10 +198,36 @@ async function switchTab(type) {
 
 async function getList() {
   try {
-    // 这里替换为实际的接口地址
-    const res = await axios.get("/api/bill/search", { params: query });
+    // 将前端 query 转换为后端需要的格式
+    const requestData = {
+      type: query.billType - 1, // 前端 1/2/3 -> 后端 0/1/2
+      dimensionType: query.dimension,
+      billMonth: query.billMonth,
+      customerName: query.customerName,
+      pageNo: query.pageNo,
+      pageSize: query.pageSize,
+      sortField: query.sortField,
+      sortOrder: query.sortOrder,
+    };
+
+    const res = await axios.post("/api/monthlyBill/search", requestData);
     if (res.data.code === 200) {
-      tableData.value = res.data.data.records || [];
+      // 将后端数据转换为前端需要的格式
+      const records = res.data.data.records || [];
+      tableData.value = records.map(item => ({
+        id: item.id,
+        billDate: item.billMonth,
+        customerName: item.custName,
+        totalCount: item.receiveCount,
+        receivableAmount: item.receivableAmount,
+        adjustAmount: item.adjustAmount,
+        specialRemark: item.specialRemark,
+        payType: item.transferType,
+        paidAmount: item.actualAmount,
+        payDate: item.transferDate,
+        remark: item.remark,
+        signUser: item.verifySign,
+      }));
       total.value = res.data.data.total || 0;
     } else {
       ElMessage.error(res.data.message || "查询失败");
@@ -190,6 +236,19 @@ async function getList() {
     console.error("请求错误:", err);
     ElMessage.error("网络错误或服务异常");
   }
+}
+
+function handleSort(field) {
+  if (query.sortField === field) {
+    // 如果点击的是同一个字段，切换排序方向
+    query.sortOrder = query.sortOrder === 'asc' ? 'desc' : 'asc';
+  } else {
+    // 点击新字段，默认升序
+    query.sortField = field;
+    query.sortOrder = 'asc';
+  }
+  query.pageNo = 1; // 重置到第一页
+  getList();
 }
 
 function handlePageChange({ pageNo, pageSize }) {
@@ -384,6 +443,27 @@ th {
   padding: 12px;
   border: 1px solid #ebeef5;
   font-weight: 600;
+}
+
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+th.sortable:hover {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.sort-icon {
+  margin-left: 4px;
+  color: #999;
+  font-size: 12px;
+}
+
+.sort-icon.active {
+  color: #1890ff;
+  font-weight: bold;
 }
 
 td {
