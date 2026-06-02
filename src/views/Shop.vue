@@ -1,6 +1,8 @@
 <template>
   <div class="page-container">
-    <h2>店铺管理</h2>
+    <div class="page-header">
+      <h2>店铺管理</h2>
+    </div>
 
     <div class="tool-box">
       <div class="search-group">
@@ -655,14 +657,14 @@ th {
   background: #fafafa;
   padding: 12px;
   text-align: center;
-  font-weight: 500;
+  font-weight: 600;
   color: #333;
-  border-bottom: 1px solid #e4e7ed;
+  border: 1px solid #ebeef5;
 }
 td {
   padding: 12px;
   text-align: center;
-  border-bottom: 1px solid #f5f5f5;
+  border: 1px solid #ebeef5;
 }
 tbody tr:hover {
   background: #fafafa;

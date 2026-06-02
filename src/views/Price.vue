@@ -1,6 +1,8 @@
 <template>
   <div class="price-management-page">
-    <h2>客户价格管理</h2>
+    <div class="page-header">
+      <h2>客户价格管理</h2>
+    </div>
 
     <!-- 搜索区域：标签 + 标签 -->
     <div class="search-box">
@@ -1412,10 +1414,12 @@ th {
   color: #333;
   padding: 12px 8px;
   border: 1px solid #ebeef5;
+  text-align: center;
 }
 td {
   padding: 12px 8px;
   border: 1px solid #ebeef5;
+  text-align: center;
 }
 .price-row {
   cursor: pointer;
@@ -1553,13 +1557,30 @@ td {
 .table-group {
   margin-bottom: 10px;
 }
+.table-group table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-group table th,
+.table-group table td {
+  text-align: center;
+  padding: 10px 8px;
+  border: 1px solid #ebeef5;
+}
+.table-group table th {
+  background: #f5f7fa;
+  font-weight: 600;
+}
+.table-group table tr:hover {
+  background: #fafafa;
+}
 
 /* 备注行 */
 .remark-row {
   background-color: #f9fafb;
 }
 .remark-row td {
-  text-align: left;
+  text-align: left !important;
   padding: 14px 16px;
   font-size: 14px;
   color: #333;
@@ -1745,7 +1766,7 @@ input[type="number"]::-webkit-outer-spin-button {
 /* 区域备注行 */
 .area-remark-row td {
   background: #f9f9f9;
-  text-align: left;
+  text-align: left !important;
   padding: 6px 12px;
   border-top: 1px dashed #eee;
 }

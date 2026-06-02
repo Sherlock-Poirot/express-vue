@@ -4,6 +4,7 @@ import router from "./router";
 import { $confirm, $msg } from "./utils/confirm";
 import axios from "axios";
 import "./assets/css/global.css";
+import { getToken, clearAuth } from "./utils/auth";
 
 // 🔥 在这里加入 Element Plus
 import ElementPlus from "element-plus";
@@ -18,6 +19,17 @@ app.use(ElementPlus, { locale: zhCn });
 // ====================
 // 全局 axios 配置（核心！）
 // ====================
+axios.interceptors.request.use(
+  (config) => {
+    const token = getToken();
+    if (token) {
+      config.headers['satoken'] = token;
+    }
+    return config;
+  },
+  (err) => Promise.reject(err)
+);
+
 axios.interceptors.response.use(
   (res) => {
     // 如果是 blob 类型的响应，直接返回，不做 code 检查
@@ -34,6 +46,11 @@ axios.interceptors.response.use(
     // 如果是 blob 类型的请求错误，需要特殊处理
     if (err.config && err.config.responseType === 'blob') {
       return Promise.reject(err);
+    }
+    // 401 未登录，跳转到登录页
+    if (err.response && err.response.status === 401) {
+      clearAuth();
+      router.push('/login');
     }
     const msg = err?.response?.data?.message || err.message || "服务异常";
     $msg.error(msg);

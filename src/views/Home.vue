@@ -1,6 +1,8 @@
 <template>
   <div>
-    <h2>首页</h2>
+    <div class="page-header">
+      <h2>首页</h2>
+    </div>
     <table>
       <thead>
         <tr>

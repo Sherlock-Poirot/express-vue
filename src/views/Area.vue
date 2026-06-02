@@ -1,6 +1,8 @@
 <template>
   <div class="area-container">
-    <h2>区域字典</h2>
+    <div class="page-header">
+      <h2>区域字典</h2>
+    </div>
     <div class="table-wrapper">
       <table>
         <thead>

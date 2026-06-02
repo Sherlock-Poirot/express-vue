@@ -189,12 +189,15 @@ onMounted(() => {
 }
 
 .page-header {
+  padding: 16px 0 20px;
+  border-bottom: 1px solid #e8e8e8;
   margin-bottom: 20px;
 }
 .page-header h2 {
-  color: #1f2f3d;
-  font-size: 22px;
   margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f1f1f;
 }
 
 /* --- 搜索区域样式修改 --- */
@@ -292,11 +295,10 @@ onMounted(() => {
 }
 
 .data-table th {
-  background: #f5f7fa;
-  padding: 12px 20px;
-  border-bottom: 1px solid #ebeef5;
-  color: #909399;
-  font-weight: 500;
+  background: #fafafa;
+  padding: 12px;
+  border: 1px solid #ebeef5;
+  font-weight: 600;
   font-size: 14px;
   position: sticky;
   top: 0;
@@ -305,9 +307,8 @@ onMounted(() => {
 }
 
 .data-table td {
-  padding: 14px 20px;
-  border-bottom: 1px solid #ebeef5;
-  color: #606266;
+  padding: 12px;
+  border: 1px solid #ebeef5;
   font-size: 14px;
   text-align: center;
 }

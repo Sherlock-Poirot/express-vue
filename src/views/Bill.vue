@@ -1,6 +1,8 @@
 <template>
   <div class="bill-management-page">
-    <h2>账单管理</h2>
+    <div class="page-header">
+      <h2>账单管理</h2>
+    </div>
 
     <!-- 第一行：搜索区域 -->
     <div class="search-toolbar">
@@ -484,6 +486,7 @@ th {
   padding: 12px;
   border: 1px solid #ebeef5;
   font-weight: 600;
+  text-align: center;
 }
 
 th.sortable {
@@ -510,6 +513,7 @@ th.sortable:hover {
 td {
   padding: 12px;
   border: 1px solid #ebeef5;
+  text-align: center;
 }
 
 .edit-btn {
