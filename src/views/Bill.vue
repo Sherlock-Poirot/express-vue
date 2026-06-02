@@ -46,9 +46,12 @@
       <button class="search-btn" @click="doExportSummary">
         汇总导出
       </button>
+      <button class="search-btn" @click="doExportDetail">
+        明细导出
+      </button>
     </div>
 
-    <!-- TAB 切换：直营 / 承包区 / 业务员 -->
+    <!-- TAB 切换：直营 / 业务员 / 承包区 -->
     <div class="tab-box">
       <div
         class="tab-item"
@@ -62,14 +65,14 @@
         :class="{ active: query.billType === 2 }"
         @click="switchTab(2)"
       >
-        承包区
+        业务员
       </div>
       <div
         class="tab-item"
         :class="{ active: query.billType === 3 }"
         @click="switchTab(3)"
       >
-        业务员
+        承包区
       </div>
     </div>
 
@@ -381,6 +384,43 @@ async function doExportSummary() {
   } catch (err) {
     console.error("导出失败", err);
     ElMessage.error("导出失败，请稍后重试");
+  }
+}
+
+async function doExportDetail() {
+  if (!query.billMonth) {
+    ElMessage.warning("请先选择账单月份");
+    return;
+  }
+  try {
+    const response = await axios.get("/api/monthlyBill/exportDetail", {
+      params: { billMonth: query.billMonth },
+      responseType: "blob",
+    });
+    
+    if (response.data.type === 'application/json') {
+      const text = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsText(response.data);
+      });
+      const errorData = JSON.parse(text);
+      ElMessage.error(errorData.message || "导出失败");
+      return;
+    }
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${query.billMonth}_明细.zip`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    ElMessage.success("明细导出成功");
+  } catch (err) {
+    console.error("明细导出失败", err);
+    ElMessage.error("明细导出失败，请稍后重试");
   }
 }
 
