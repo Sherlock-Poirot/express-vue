@@ -171,7 +171,7 @@
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from "vue";
 import axios from "axios";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElLoading } from "element-plus";
 import Pagination from "@/components/Pagination.vue";
 
 const query = reactive({
@@ -345,8 +345,32 @@ function doCalculate() {
   console.log("执行计算");
 }
 
-function doGenerateSummary() {
-  console.log("生成汇总");
+async function doGenerateSummary() {
+  if (!query.billMonth) {
+    ElMessage.warning("请先选择账单月份");
+    return;
+  }
+  const loading = ElLoading.service({
+    lock: true,
+    text: "正在生成汇总账单...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
+  try {
+    const res = await axios.post("/api/monthlyBill/generate", null, {
+      params: { billMonth: query.billMonth }
+    });
+    if (res.data.code === 200) {
+      ElMessage.success("生成汇总账单成功");
+      await getList();
+    } else {
+      ElMessage.error(res.data.message || "生成失败");
+    }
+  } catch (err) {
+    console.error("生成汇总账单失败", err);
+    ElMessage.error("生成汇总账单失败，请稍后重试");
+  } finally {
+    loading.close();
+  }
 }
 
 async function doExportSummary() {
@@ -354,13 +378,17 @@ async function doExportSummary() {
     ElMessage.warning("请先选择账单月份");
     return;
   }
+  const loading = ElLoading.service({
+    lock: true,
+    text: "正在导出汇总...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
   try {
     const response = await axios.get("/api/monthlyBill/export", {
       params: { billMonth: query.billMonth },
       responseType: "blob",
     });
     
-    // 检查返回的是不是错误（当后端返回错误时，返回的blob可能是JSON字符串）
     if (response.data.type === 'application/json') {
       const text = await new Promise((resolve) => {
         const reader = new FileReader();
@@ -379,11 +407,13 @@ async function doExportSummary() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    window.URL.revokeObjectURL(url); // 清理资源
+    window.URL.revokeObjectURL(url);
     ElMessage.success("导出成功");
   } catch (err) {
     console.error("导出失败", err);
     ElMessage.error("导出失败，请稍后重试");
+  } finally {
+    loading.close();
   }
 }
 
@@ -392,6 +422,11 @@ async function doExportDetail() {
     ElMessage.warning("请先选择账单月份");
     return;
   }
+  const loading = ElLoading.service({
+    lock: true,
+    text: "正在导出明细...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
   try {
     const response = await axios.get("/api/monthlyBill/exportDetail", {
       params: { billMonth: query.billMonth },
@@ -421,6 +456,8 @@ async function doExportDetail() {
   } catch (err) {
     console.error("明细导出失败", err);
     ElMessage.error("明细导出失败，请稍后重试");
+  } finally {
+    loading.close();
   }
 }
 
