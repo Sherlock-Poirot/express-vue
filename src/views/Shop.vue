@@ -78,6 +78,14 @@
             @keyup.enter="doSearch"
           />
         </div>
+        <div class="search-item">
+          <label>店铺名称：</label>
+          <input
+            v-model="queryParams.shopName"
+            placeholder="请输入"
+            @keyup.enter="doSearch"
+          />
+        </div>
         <button class="btn search" @click="doSearch">搜索</button>
       </div>
 
@@ -281,6 +289,7 @@ const queryParams = reactive({
   name: "",
   code: "",
   empName: "",
+  shopName: "",
   pageNo: 1,
   pageSize: 10,
 });
