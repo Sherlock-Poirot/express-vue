@@ -52,6 +52,9 @@
         <div class="header-left">
           <el-breadcrumb separator="/">
             <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item v-if="currentParentMenu">
+              {{ currentParentMenu.menuName }}
+            </el-breadcrumb-item>
             <el-breadcrumb-item v-if="currentTab && currentTab.path !== '/'">
               {{ currentTab.menuName }}
             </el-breadcrumb-item>
@@ -149,6 +152,23 @@ const currentPath = computed(() => route.path)
 
 const currentTab = computed(() => {
   return tabs.value.find(tab => tab.path === currentPath.value)
+})
+
+const currentParentMenu = computed(() => {
+  if (!currentTab.value || currentTab.value.path === '/') {
+    return null
+  }
+  
+  for (const menu of menuList.value) {
+    if (menu.children && menu.children.length > 0) {
+      const child = menu.children.find(c => c.path === currentPath.value)
+      if (child) {
+        return menu
+      }
+    }
+  }
+  
+  return null
 })
 
 const userAvatar = computed(() => {
