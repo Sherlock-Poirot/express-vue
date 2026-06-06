@@ -36,8 +36,17 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180" />
-        <el-table-column label="操作" width="250" fixed="right">
+        <el-table-column prop="createTime" label="创建时间" width="150">
+          <template #default="{ row }">
+            {{ formatDate(row.createTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="更新时间" width="150">
+          <template #default="{ row }">
+            {{ formatDate(row.updateTime || row.updatetime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="380" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button 
@@ -47,6 +56,7 @@
             >
               {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
+            <el-button type="info" size="small" @click="handleAuthorize(row)">授权</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -93,6 +103,37 @@
         <el-button type="primary" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 授权弹窗 -->
+    <el-dialog
+      v-model="authDialogVisible"
+      title="角色授权"
+      width="500px"
+      destroy-on-close
+    >
+      <div class="auth-container">
+        <div class="auth-tip">请选择要分配给该用户的角色：</div>
+        <el-checkbox-group v-model="selectedRoleIds" class="role-list">
+          <el-checkbox 
+            v-for="role in allRoles" 
+            :key="role.id" 
+            :value="role.id"
+            class="role-item"
+          >
+            {{ role.roleName }}
+          </el-checkbox>
+        </el-checkbox-group>
+        <div v-if="allRoles.length === 0" class="empty-roles">
+          暂无可分配的角色
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="authDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleAuthSubmit" :loading="authSubmitting">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -106,6 +147,16 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import axios from 'axios'
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return '-'
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const loading = ref(false)
 const tableData = ref([])
 const total = ref(0)
@@ -115,6 +166,13 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('新增用户')
 const isEdit = ref(false)
 const formRef = ref(null)
+
+// 授权相关
+const authDialogVisible = ref(false)
+const allRoles = ref([])
+const selectedRoleIds = ref([])
+const currentAuthUserId = ref(null)
+const authSubmitting = ref(false)
 
 const searchForm = reactive({
   username: '',
@@ -152,6 +210,28 @@ const getList = async () => {
     console.error('获取列表失败:', err)
   } finally {
     loading.value = false
+  }
+}
+
+const getAllRoles = async () => {
+  try {
+    const res = await axios.get('/api/role/list')
+    if (res.data.code === 200) {
+      allRoles.value = res.data.data || []
+    }
+  } catch (err) {
+    console.error('获取角色列表失败:', err)
+  }
+}
+
+const getUserRoles = async (userId) => {
+  try {
+    const res = await axios.get(`/api/user-role/role-ids/${userId}`)
+    if (res.data.code === 200) {
+      selectedRoleIds.value = res.data.data || []
+    }
+  } catch (err) {
+    console.error('获取用户角色失败:', err)
   }
 }
 
@@ -247,6 +327,32 @@ const handleDelete = async (row) => {
   }
 }
 
+// 授权功能
+const handleAuthorize = async (row) => {
+  currentAuthUserId.value = row.id
+  selectedRoleIds.value = []
+  await getAllRoles()
+  await getUserRoles(row.id)
+  authDialogVisible.value = true
+}
+
+const handleAuthSubmit = async () => {
+  authSubmitting.value = true
+  try {
+    await axios.post('/api/user-role/assign', {
+      userId: currentAuthUserId.value,
+      roleIds: selectedRoleIds.value
+    })
+    ElMessage.success('授权成功')
+    authDialogVisible.value = false
+  } catch (err) {
+    console.error('授权失败:', err)
+    ElMessage.error('授权失败')
+  } finally {
+    authSubmitting.value = false
+  }
+}
+
 onMounted(() => {
   getList()
 })
@@ -277,5 +383,39 @@ onMounted(() => {
 .pagination-box {
   display: flex;
   justify-content: flex-end;
+}
+
+.auth-container {
+  padding: 10px 0;
+}
+
+.auth-tip {
+  margin-bottom: 20px;
+  color: #606266;
+  font-size: 14px;
+}
+
+.role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.role-item {
+  padding: 8px 12px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  margin-right: 0 !important;
+  transition: all 0.3s;
+}
+
+.role-item:hover {
+  background: #f5f7fa;
+}
+
+.empty-roles {
+  text-align: center;
+  padding: 30px;
+  color: #909399;
 }
 </style>

@@ -33,9 +33,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="sortOrder" label="排序" width="80" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="300" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button type="success" size="small" @click="handleMenuAuth(row)">菜单授权</el-button>
             <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
@@ -85,6 +86,35 @@
         <el-button type="primary" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 菜单授权弹窗 -->
+    <el-dialog
+      v-model="menuAuthDialogVisible"
+      title="菜单授权"
+      width="600px"
+      destroy-on-close
+    >
+      <div class="menu-auth-container">
+        <div class="auth-tip">请选择要分配给该角色的菜单权限：</div>
+        <div class="menu-tree-box">
+          <el-tree
+            ref="menuTreeRef"
+            :data="menuTreeData"
+            :props="menuTreeProps"
+            node-key="id"
+            show-checkbox
+            default-expand-all
+            :expand-on-click-node="false"
+          />
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="menuAuthDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleMenuAuthSubmit" :loading="menuAuthSubmitting">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -107,6 +137,17 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('新增角色')
 const isEdit = ref(false)
 const formRef = ref(null)
+
+// 菜单授权相关
+const menuAuthDialogVisible = ref(false)
+const menuTreeData = ref([])
+const menuTreeRef = ref(null)
+const currentAuthRoleId = ref(null)
+const menuAuthSubmitting = ref(false)
+const menuTreeProps = {
+  children: 'children',
+  label: 'menuName'
+}
 
 const searchForm = reactive({
   roleName: ''
@@ -144,6 +185,47 @@ const getList = async () => {
     loading.value = false
   }
 }
+
+const getAllMenus = async () => {
+  try {
+    const res = await axios.get('/api/menu/all-tree')
+    if (res.data.code === 200) {
+      menuTreeData.value = res.data.data || []
+    }
+  } catch (err) {
+    console.error('获取菜单树失败:', err)
+  }
+}
+
+const getRoleMenus = async (roleId) => {
+  try {
+    const res = await axios.get(`/api/role-menu/menus/${roleId}`)
+    if (res.data.code === 200) {
+      // 提取所有菜单ID
+      const menuIds = []
+      const extractIds = (nodes) => {
+        nodes.forEach(node => {
+          menuIds.push(node.id)
+          if (node.children && node.children.length > 0) {
+            extractIds(node.children)
+          }
+        })
+      }
+      extractIds(res.data.data || [])
+      
+      // 设置勾选状态
+      nextTick(() => {
+        if (menuTreeRef.value) {
+          menuTreeRef.value.setCheckedKeys(menuIds)
+        }
+      })
+    }
+  } catch (err) {
+    console.error('获取角色菜单失败:', err)
+  }
+}
+
+import { nextTick } from 'vue'
 
 const resetSearch = () => {
   searchForm.roleName = ''
@@ -213,6 +295,44 @@ const handleDelete = async (row) => {
   }
 }
 
+// 菜单授权功能
+const handleMenuAuth = async (row) => {
+  currentAuthRoleId.value = row.id
+  await getAllMenus()
+  
+  // 清空选中状态
+  if (menuTreeRef.value) {
+    menuTreeRef.value.setCheckedKeys([])
+  }
+  
+  await getRoleMenus(row.id)
+  menuAuthDialogVisible.value = true
+}
+
+const handleMenuAuthSubmit = async () => {
+  menuAuthSubmitting.value = true
+  try {
+    // 获取所有选中的菜单ID
+    const checkedKeys = menuTreeRef.value.getCheckedKeys()
+    // 同时获取半选中的父节点ID
+    const halfCheckedKeys = menuTreeRef.value.getHalfCheckedKeys()
+    // 合并所有选中的ID
+    const allMenuIds = [...checkedKeys, ...halfCheckedKeys]
+    
+    await axios.post('/api/role-menu/assign', {
+      roleId: currentAuthRoleId.value,
+      menuIds: allMenuIds
+    })
+    ElMessage.success('菜单授权成功')
+    menuAuthDialogVisible.value = false
+  } catch (err) {
+    console.error('菜单授权失败:', err)
+    ElMessage.error('菜单授权失败')
+  } finally {
+    menuAuthSubmitting.value = false
+  }
+}
+
 onMounted(() => {
   getList()
 })
@@ -243,5 +363,27 @@ onMounted(() => {
 .pagination-box {
   display: flex;
   justify-content: flex-end;
+}
+
+.menu-auth-container {
+  padding: 10px 0;
+}
+
+.auth-tip {
+  margin-bottom: 20px;
+  color: #606266;
+  font-size: 14px;
+}
+
+.menu-tree-box {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  padding: 15px;
+}
+
+:deep(.el-tree-node__content) {
+  padding: 5px 0;
 }
 </style>
