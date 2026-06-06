@@ -20,6 +20,11 @@
   color: #1f1f1f;
 }
 
+/* 隐藏员工管理页面的副标题 */
+.staff-management-container .page-header {
+  display: none;
+}
+
 /* 👇 只对【你的客户价格页面】做手机适配，不碰侧边栏！ */
 @media (max-width: 768px) {
   /* 仅修复页面内表格 */

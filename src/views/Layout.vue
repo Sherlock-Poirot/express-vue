@@ -401,11 +401,12 @@ watch(() => route.path, (newPath) => {
 }
 
 .header {
-  background: linear-gradient(180deg, #304156 0%, #1a2a3a 100%);
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
+  border-bottom: 1px solid #e4e7ed;
 }
 
 .header-left {
@@ -419,11 +420,11 @@ watch(() => route.path, (newPath) => {
 
 .header-left .el-breadcrumb__inner,
 .header-left .el-breadcrumb__separator {
-  color: white;
+  color: #606266;
 }
 
 .header-left .el-breadcrumb__inner a {
-  color: white;
+  color: #606266;
 }
 
 .header-right {
@@ -443,7 +444,7 @@ watch(() => route.path, (newPath) => {
 }
 
 .user-info:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f5f7fa;
 }
 
 .user-avatar {
@@ -454,7 +455,7 @@ watch(() => route.path, (newPath) => {
 
 .user-name {
   font-size: 14px;
-  color: white;
+  color: #606266;
 }
 
 .tabs-bar {

@@ -211,6 +211,10 @@ onMounted(() => {
   min-height: 100vh;
 }
 
+.staff-management-container > h2 {
+  display: none;
+}
+
 .page-header {
   padding: 16px 0 20px;
   border-bottom: 1px solid #e8e8e8;
