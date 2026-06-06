@@ -37,6 +37,10 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'Profile'
+})
+
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'

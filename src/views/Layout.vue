@@ -28,7 +28,7 @@
                 :key="child.id"
                 class="menu-child"
                 :class="{ 'active': currentPath === child.path }"
-                @click="navigateTo(child.path)"
+                @click="openTab(child)"
               >
                 {{ child.menuName }}
               </div>
@@ -38,7 +38,7 @@
             v-else-if="menu.menuType === 2"
             class="menu-parent"
             :class="{ 'active': currentPath === menu.path }"
-            @click="navigateTo(menu.path)"
+            @click="openTab(menu)"
           >
             <el-icon :size="16"><component :is="getIcon(menu.icon)" /></el-icon>
             <span>{{ menu.menuName }}</span>
@@ -49,6 +49,14 @@
     
     <el-container>
       <el-header class="header">
+        <div class="header-left">
+          <el-breadcrumb separator="/">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item v-if="currentTab && currentTab.path !== '/'">
+              {{ currentTab.menuName }}
+            </el-breadcrumb-item>
+          </el-breadcrumb>
+        </div>
         <div class="header-right">
           <el-dropdown @command="handleCommand">
             <div class="user-info">
@@ -71,20 +79,46 @@
           </el-dropdown>
         </div>
       </el-header>
+
+      <!-- 标签页栏 -->
+      <div class="tabs-bar" v-if="tabs.length > 0">
+        <div class="tabs-container">
+          <div
+            v-for="tab in tabs"
+            :key="tab.path"
+            class="tab-item"
+            :class="{ 'active': currentPath === tab.path }"
+            @click="switchTab(tab)"
+          >
+            <span class="tab-title">{{ tab.menuName }}</span>
+            <el-icon
+              class="tab-close"
+              v-if="tab.path !== '/'"
+              @click.stop="closeTab(tab)"
+            >
+              <Close />
+            </el-icon>
+          </div>
+        </div>
+      </div>
       
       <el-main class="main-content">
-        <router-view />
+        <router-view v-slot="{ Component }">
+          <keep-alive :include="cachedComponents">
+            <component :is="Component" :key="currentPath" />
+          </keep-alive>
+        </router-view>
       </el-main>
     </el-container>
   </el-container>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { User, ArrowDown, SwitchButton, Document, Menu, Setting, DataLine, UserFilled, TrendCharts, Folder } from '@element-plus/icons-vue'
+import { User, ArrowDown, SwitchButton, Document, Menu, Setting, DataLine, UserFilled, TrendCharts, Folder, Close } from '@element-plus/icons-vue'
 import { getToken, getUser, clearAuth, setUser } from '../utils/auth'
 
 const route = useRoute()
@@ -93,6 +127,9 @@ const router = useRouter()
 const menuList = ref([])
 const currentUser = ref(getUser())
 const openedMenus = ref([])
+const tabs = ref([])
+const tabStates = ref({})
+const cachedComponents = ref([])
 
 const menuIconMap = {
   'el-icon-setting': Setting,
@@ -109,6 +146,10 @@ const menuIconMap = {
 }
 
 const currentPath = computed(() => route.path)
+
+const currentTab = computed(() => {
+  return tabs.value.find(tab => tab.path === currentPath.value)
+})
 
 const userAvatar = computed(() => {
   const name = currentUser.value?.realName || currentUser.value?.username || 'U'
@@ -128,9 +169,81 @@ const toggleMenu = (menuId) => {
   }
 }
 
-const navigateTo = (path) => {
-  router.push(path)
+const openTab = (menu) => {
+  const existingTab = tabs.value.find(tab => tab.path === menu.path)
+  if (!existingTab) {
+    tabs.value.push({
+      path: menu.path,
+      menuName: menu.menuName,
+      id: menu.id
+    })
+    updateCachedComponents()
+  }
+  router.push(menu.path)
 }
+
+const switchTab = (tab) => {
+  router.push(tab.path)
+}
+
+const closeTab = (tab) => {
+  const index = tabs.value.findIndex(t => t.path === tab.path)
+  if (index > -1) {
+    tabs.value.splice(index, 1)
+    updateCachedComponents()
+    
+    if (currentPath.value === tab.path) {
+      const nextTab = tabs.value[index] || tabs.value[index - 1]
+      if (nextTab) {
+        router.push(nextTab.path)
+      } else {
+        router.push('/')
+      }
+    }
+  }
+}
+
+const updateCachedComponents = () => {
+  cachedComponents.value = tabs.value.map(tab => {
+    const componentName = getComponentName(tab.path)
+    return componentName
+  })
+}
+
+const getComponentName = (path) => {
+  const pathMap = {
+    '/': 'Home',
+    '/settlement/price': 'Price',
+    '/settlement/shop': 'Shop',
+    '/settlement/bill': 'Bill',
+    '/settlement/employee': 'Staff',
+    '/system/user': 'UserManage',
+    '/system/role': 'RoleManage',
+    '/area': 'Area',
+    '/profile': 'Profile'
+  }
+  return pathMap[path] || ''
+}
+
+const saveTabState = (path, state) => {
+  tabStates.value[path] = state
+}
+
+const getTabState = (path) => {
+  return tabStates.value[path]
+}
+
+const updateTabState = (path, state) => {
+  if (tabStates.value[path]) {
+    tabStates.value[path] = { ...tabStates.value[path], ...state }
+  } else {
+    tabStates.value[path] = state
+  }
+}
+
+provide('saveTabState', saveTabState)
+provide('getTabState', getTabState)
+provide('updateTabState', updateTabState)
 
 const fetchMenuTree = async () => {
   try {
@@ -176,9 +289,18 @@ const handleCommand = async (command) => {
 onMounted(() => {
   fetchMenuTree()
   fetchCurrentUser()
+  
+  if (currentPath.value !== '/') {
+    const homeTab = { path: '/', menuName: '首页', id: 'home' }
+    tabs.value.push(homeTab)
+  }
 })
 
-watch(() => route.path, () => {
+watch(() => route.path, (newPath) => {
+  if (newPath === '/' && tabs.value.length === 0) {
+    tabs.value.push({ path: '/', menuName: '首页', id: 'home' })
+    updateCachedComponents()
+  }
 })
 </script>
 
@@ -282,8 +404,26 @@ watch(() => route.path, () => {
   background: linear-gradient(180deg, #304156 0%, #1a2a3a 100%);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 0 20px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-left .el-breadcrumb {
+  font-size: 14px;
+}
+
+.header-left .el-breadcrumb__inner,
+.header-left .el-breadcrumb__separator {
+  color: white;
+}
+
+.header-left .el-breadcrumb__inner a {
+  color: white;
 }
 
 .header-right {
@@ -314,6 +454,61 @@ watch(() => route.path, () => {
 
 .user-name {
   font-size: 14px;
+  color: white;
+}
+
+.tabs-bar {
+  background: #fff;
+  border-bottom: 1px solid #e4e7ed;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+}
+
+.tabs-container {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab-item:hover {
+  background: #ecf5ff;
+  border-color: #409eff;
+}
+
+.tab-item.active {
+  background: #409eff;
+  border-color: #409eff;
+  color: white;
+}
+
+.tab-title {
+  font-size: 13px;
+}
+
+.tab-close {
+  font-size: 14px;
+  transition: transform 0.2s;
+}
+
+.tab-close:hover {
+  transform: scale(1.2);
+}
+
+.tab-item.active .tab-close {
   color: white;
 }
 

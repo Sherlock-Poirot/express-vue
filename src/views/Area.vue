@@ -1,8 +1,5 @@
 <template>
   <div class="area-container">
-    <div class="page-header">
-      <h2>区域字典</h2>
-    </div>
     <div class="table-wrapper">
       <table>
         <thead>
@@ -27,6 +24,10 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'Area'
+})
+
 import { ref, onMounted } from "vue";
 import axios from "axios";
 

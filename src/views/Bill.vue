@@ -1,9 +1,5 @@
 <template>
   <div class="bill-management-page">
-    <div class="page-header">
-      <h2>账单管理</h2>
-    </div>
-
     <!-- 第一行：搜索区域 -->
     <div class="search-toolbar">
       <div class="search-item">
@@ -169,10 +165,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from "vue";
+defineOptions({
+  name: 'Bill'
+})
+
+import { ref, reactive, onMounted, onUnmounted, inject, watch } from "vue";
 import axios from "axios";
 import { ElMessage, ElLoading } from "element-plus";
 import Pagination from "@/components/Pagination.vue";
+
+const saveTabState = inject('saveTabState');
+const getTabState = inject('getTabState');
+const currentPath = '/settlement/bill';
 
 const query = reactive({
   dimension: "time",
@@ -333,7 +337,35 @@ function startPollTask(taskNo) {
   }, POLL_INTERVAL);
 }
 
+watch(query, (newVal) => {
+  if (saveTabState) {
+    saveTabState(currentPath, {
+      dimension: newVal.dimension,
+      billMonth: newVal.billMonth,
+      customerName: newVal.customerName,
+      billType: newVal.billType,
+      pageNo: newVal.pageNo,
+      pageSize: newVal.pageSize,
+      sortField: newVal.sortField,
+      sortOrder: newVal.sortOrder,
+    });
+  }
+}, { deep: true });
+
 onMounted(() => {
+  if (getTabState) {
+    const savedState = getTabState(currentPath);
+    if (savedState) {
+      query.dimension = savedState.dimension || 'time';
+      query.billMonth = savedState.billMonth || '';
+      query.customerName = savedState.customerName || '';
+      query.billType = savedState.billType || 1;
+      query.pageNo = savedState.pageNo || 1;
+      query.pageSize = savedState.pageSize || 10;
+      query.sortField = savedState.sortField || '';
+      query.sortOrder = savedState.sortOrder || '';
+    }
+  }
   getList();
 });
 

@@ -1,10 +1,5 @@
 <template>
   <div class="staff-management-container">
-    <!-- 页面标题 -->
-    <div class="page-header">
-      <h2>员工管理</h2>
-    </div>
-
     <!-- 搜索卡片 -->
     <div class="search-card">
       <div class="search-row">
@@ -91,10 +86,18 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue";
+defineOptions({
+  name: 'Staff'
+})
+
+import { ref, reactive, computed, onMounted, inject, watch } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
 import Pagination from "@/components/Pagination.vue";
+
+const saveTabState = inject('saveTabState');
+const getTabState = inject('getTabState');
+const currentPath = '/settlement/employee';
 
 const query = reactive({
   staffName: "",
@@ -176,7 +179,27 @@ function handlePageChange({ pageNo: newPageNo, pageSize: newPageSize }) {
   getList();
 }
 
+watch([query, pageNo, pageSize], () => {
+  if (saveTabState) {
+    saveTabState(currentPath, {
+      staffName: query.staffName,
+      phone: query.phone,
+      pageNo: pageNo.value,
+      pageSize: pageSize.value,
+    });
+  }
+}, { deep: true });
+
 onMounted(() => {
+  if (getTabState) {
+    const savedState = getTabState(currentPath);
+    if (savedState) {
+      query.staffName = savedState.staffName || '';
+      query.phone = savedState.phone || '';
+      pageNo.value = savedState.pageNo || 1;
+      pageSize.value = savedState.pageSize || 10;
+    }
+  }
   getList();
 });
 </script>

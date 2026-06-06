@@ -1,9 +1,5 @@
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <h2>店铺管理</h2>
-    </div>
-
     <div class="tool-box">
       <div class="search-group">
         <div class="search-item">
@@ -279,11 +275,19 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from "vue";
+defineOptions({
+  name: 'Shop'
+})
+
+import { ref, reactive, onMounted, onUnmounted, inject, watch } from "vue";
 import axios from "axios";
 import { getCurrentInstance } from "vue";
 import Pagination from "@/components/Pagination.vue";
 const { proxy } = getCurrentInstance();
+
+const saveTabState = inject('saveTabState');
+const getTabState = inject('getTabState');
+const currentPath = '/settlement/shop';
 
 const queryParams = reactive({
   name: "",
@@ -426,7 +430,31 @@ function initLoadMore() {
   });
 }
 
+watch(queryParams, (newVal) => {
+  if (saveTabState) {
+    saveTabState(currentPath, {
+      name: newVal.name,
+      code: newVal.code,
+      empName: newVal.empName,
+      shopName: newVal.shopName,
+      pageNo: newVal.pageNo,
+      pageSize: newVal.pageSize
+    });
+  }
+}, { deep: true });
+
 onMounted(() => {
+  if (getTabState) {
+    const savedState = getTabState(currentPath);
+    if (savedState) {
+      queryParams.name = savedState.name || '';
+      queryParams.code = savedState.code || '';
+      queryParams.empName = savedState.empName || '';
+      queryParams.shopName = savedState.shopName || '';
+      queryParams.pageNo = savedState.pageNo || 1;
+      queryParams.pageSize = savedState.pageSize || 10;
+    }
+  }
   getList();
   initLoadMore();
   setTimeout(() => {

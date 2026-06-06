@@ -1,7 +1,6 @@
 <template>
   <div class="page-container">
-    <div class="page-header">
-      <h2>用户管理</h2>
+    <div class="action-bar">
       <el-button type="primary" @click="handleAdd">
         <el-icon><Plus /></el-icon>
         新增用户
@@ -98,6 +97,10 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'UserManage'
+})
+
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
@@ -256,17 +259,8 @@ onMounted(() => {
   padding: 20px;
 }
 
-.page-header {
-  padding: 16px 0 20px;
-  border-bottom: 1px solid #e8e8e8;
+.action-bar {
   margin-bottom: 20px;
-}
-
-.page-header h2 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f1f1f;
 }
 
 .search-box {

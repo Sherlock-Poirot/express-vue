@@ -1,8 +1,5 @@
 <template>
   <div>
-    <div class="page-header">
-      <h2>首页</h2>
-    </div>
     <table>
       <thead>
         <tr>
@@ -23,6 +20,10 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'Home'
+})
+
 const homeData = [
   { id: 1, companyName: '圆恒供应链', remark: '核心合作客户' },
   { id: 2, companyName: '台州速运', remark: '月结客户' },

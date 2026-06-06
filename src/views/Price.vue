@@ -1,9 +1,5 @@
 <template>
   <div class="price-management-page">
-    <div class="page-header">
-      <h2>客户价格管理</h2>
-    </div>
-
     <!-- 搜索区域：标签 + 标签 -->
     <div class="search-box">
       <div class="search-item">
@@ -571,9 +567,19 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted, computed } from "vue";
+defineOptions({
+  name: 'Price'
+})
+
+import { ref, reactive, onMounted, onUnmounted, computed, inject, watch } from "vue";
 import axios from "axios";
 import Pagination from "@/components/Pagination.vue";
+
+const saveTabState = inject('saveTabState');
+const getTabState = inject('getTabState');
+const updateTabState = inject('updateTabState');
+
+const currentPath = '/settlement/price';
 
 // 区域备注（你后端新加的字段）
 const areaRemarkList = ref([]);
@@ -780,7 +786,27 @@ function onKeyDown(e) {
   if (e.key === "Escape" && showModal.value) closeModal();
 }
 
+watch(queryParams, (newVal) => {
+  if (saveTabState) {
+    saveTabState(currentPath, {
+      name: newVal.name,
+      code: newVal.code,
+      pageNo: newVal.pageNo,
+      pageSize: newVal.pageSize
+    });
+  }
+}, { deep: true });
+
 onMounted(() => {
+  if (getTabState) {
+    const savedState = getTabState(currentPath);
+    if (savedState) {
+      queryParams.name = savedState.name || '';
+      queryParams.code = savedState.code || '';
+      queryParams.pageNo = savedState.pageNo || 1;
+      queryParams.pageSize = savedState.pageSize || 10;
+    }
+  }
   getList();
   window.addEventListener("keydown", onKeyDown);
 });
