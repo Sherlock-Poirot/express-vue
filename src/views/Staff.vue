@@ -19,7 +19,7 @@
             @keyup.enter="getList"
           />
         </div>
-        <!-- 按钮组直接放在 search-row 里，方便在同一行排列 -->
+        <!-- 按钮组 -->
         <div class="button-group">
           <button class="btn-search" @click="getList">搜索</button>
           <button class="btn-reset" @click="resetQuery">重置</button>
@@ -29,6 +29,14 @@
 
     <!-- 数据表格 -->
     <div class="table-card">
+      <!-- 操作按钮 -->
+      <div class="action-bar">
+        <button class="btn-primary" @click="handleAdd">
+          <span class="icon">+</span>
+          新增
+        </button>
+      </div>
+
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
@@ -45,6 +53,7 @@
               <th class="text-center">员工姓名</th>
               <th class="text-center">手机号码</th>
               <th class="text-center">入职日期</th>
+              <th class="text-center">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -64,6 +73,9 @@
               </td>
               <td>{{ item.phone || "—" }}</td>
               <td>{{ item.entryDate }}</td>
+              <td class="text-center">
+                <button class="btn-link" @click="handleEdit(item)">编辑</button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -81,6 +93,59 @@
       @change="handlePageChange"
       v-if="total > 0"
     />
+    </div>
+
+    <!-- 新增/编辑弹窗 -->
+    <div class="modal-overlay" v-if="modalVisible" @click.self="closeModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>{{ isEdit ? '编辑员工' : '新增员工' }}</h3>
+          <button class="modal-close" @click="closeModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-item">
+            <label>承包区<span class="required">*</span></label>
+            <input
+              v-model="form.contractName"
+              placeholder="请输入承包区"
+            />
+          </div>
+          <div class="form-item">
+            <label>姓名<span class="required">*</span></label>
+            <input
+              v-model="form.realName"
+              placeholder="请输入姓名"
+            />
+          </div>
+          <div class="form-item">
+            <label>手机号码<span class="required">*</span></label>
+            <input
+              v-model="form.phone"
+              placeholder="请输入手机号码"
+            />
+          </div>
+          <div class="form-item">
+            <label>入职日期<span class="required">*</span></label>
+            <input
+              v-model="form.entryDate"
+              type="date"
+            />
+          </div>
+          <div class="form-item">
+            <label>职员类型<span class="required">*</span></label>
+            <select v-model="form.staffType">
+              <option :value="0">承包区</option>
+              <option :value="1">业务员</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" @click="closeModal">取消</button>
+          <button class="btn-confirm" @click="handleSubmit" :disabled="submitting">
+            {{ submitting ? '提交中...' : '确定' }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -109,6 +174,20 @@ const pageSize = ref(10);
 const list = ref([]);
 const total = ref(0);
 const selectedIds = ref([]);
+
+// 弹窗相关
+const modalVisible = ref(false);
+const isEdit = ref(false);
+const submitting = ref(false);
+
+const form = reactive({
+  id: null,
+  contractName: "",
+  realName: "",
+  phone: "",
+  entryDate: "",
+  staffType: 0
+});
 
 const totalPages = computed(() => {
   return Math.ceil(total.value / pageSize.value);
@@ -179,6 +258,88 @@ function handlePageChange({ pageNo: newPageNo, pageSize: newPageSize }) {
   getList();
 }
 
+// 新增
+function handleAdd() {
+  isEdit.value = false;
+  resetForm();
+  modalVisible.value = true;
+}
+
+// 编辑
+function handleEdit(item) {
+  isEdit.value = true;
+  form.id = item.id;
+  form.contractName = item.contractName || '';
+  form.realName = item.realName || '';
+  form.phone = item.phone || '';
+  form.entryDate = item.entryDate || '';
+  form.staffType = item.staffType !== undefined ? item.staffType : 0;
+  modalVisible.value = true;
+}
+
+// 重置表单
+function resetForm() {
+  form.id = null;
+  form.contractName = "";
+  form.realName = "";
+  form.phone = "";
+  form.entryDate = "";
+  form.staffType = 0;
+}
+
+// 关闭弹窗
+function closeModal() {
+  modalVisible.value = false;
+  resetForm();
+}
+
+// 提交表单
+async function handleSubmit() {
+  // 表单验证
+  if (!form.contractName.trim()) {
+    ElMessage.warning('请输入承包区');
+    return;
+  }
+  if (!form.realName.trim()) {
+    ElMessage.warning('请输入姓名');
+    return;
+  }
+  if (!form.phone.trim()) {
+    ElMessage.warning('请输入手机号码');
+    return;
+  }
+  if (!form.entryDate) {
+    ElMessage.warning('请选择入职日期');
+    return;
+  }
+
+  submitting.value = true;
+  try {
+    const url = isEdit.value ? '/api/staff/update' : '/api/staff/add';
+    const res = await axios.post(url, {
+      id: form.id,
+      contractName: form.contractName,
+      realName: form.realName,
+      phone: form.phone,
+      entryDate: form.entryDate,
+      staffType: form.staffType
+    });
+
+    if (res.data.code === 200) {
+      ElMessage.success(isEdit.value ? '编辑成功' : '新增成功');
+      closeModal();
+      getList();
+    } else {
+      ElMessage.error(res.data.message || '操作失败');
+    }
+  } catch (err) {
+    console.error("提交错误:", err);
+    ElMessage.error("网络错误或服务异常");
+  } finally {
+    submitting.value = false;
+  }
+}
+
 watch([query, pageNo, pageSize], () => {
   if (saveTabState) {
     saveTabState(currentPath, {
@@ -227,7 +388,7 @@ onMounted(() => {
   color: #1f1f1f;
 }
 
-/* --- 搜索区域样式修改 --- */
+/* --- 搜索区域样式 --- */
 .search-card {
   background: #fff;
   padding: 20px;
@@ -238,15 +399,13 @@ onMounted(() => {
 
 .search-row {
   display: flex;
-  align-items: center; /* 垂直居中 */
+  align-items: center;
   gap: 20px;
-  /* 去掉 flex-wrap: wrap，强制不换行 */
 }
 
 .search-item {
   display: flex;
   align-items: center;
-  /* 去掉 min-width，改为固定宽度或者 flex: 0，防止被挤压 */
   flex: 0 0 auto;
 }
 .search-item label {
@@ -254,10 +413,10 @@ onMounted(() => {
   color: #606266;
   font-weight: 500;
   font-size: 14px;
-  flex-shrink: 0; /* 防止 label 被压缩 */
+  flex-shrink: 0;
 }
 .search-item input {
-  width: 200px; /* 给输入框一个固定宽度 */
+  width: 200px;
   padding: 10px 12px;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
@@ -273,7 +432,6 @@ onMounted(() => {
 .button-group {
   display: flex;
   gap: 12px;
-  /* 按钮组靠右对齐，如果想去掉靠右效果，把 margin-left 删掉即可 */
   margin-left: auto;
 }
 .btn-search {
@@ -297,69 +455,221 @@ onMounted(() => {
   cursor: pointer;
   font-size: 14px;
 }
-.btn-reset:hover {
-  background: #ecf5ff;
-  color: #409eff;
-}
-/* --- 搜索区域样式修改结束 --- */
 
+/* --- 表格区域样式 --- */
 .table-card {
   background: #fff;
+  padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+}
+
+.action-bar {
+  margin-bottom: 16px;
+}
+
+.btn-primary {
+  background: #409eff;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary:hover {
+  background: #66b1ff;
+}
+
+.btn-primary .icon {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.btn-link {
+  background: none;
+  color: #409eff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+}
+.btn-link:hover {
+  color: #66b1ff;
 }
 
 .table-wrapper {
-  position: relative;
-  overflow: auto;
+  margin-bottom: 20px;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #ebeef5;
+  text-align: left;
 }
 
 .data-table th {
   background: #fafafa;
-  padding: 12px;
-  border: 1px solid #ebeef5;
-  font-weight: 600;
-  font-size: 14px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  text-align: center;
+  color: #606266;
+  font-weight: 500;
 }
 
-.data-table td {
-  padding: 12px;
-  border: 1px solid #ebeef5;
-  font-size: 14px;
+.text-center {
   text-align: center;
-}
-
-.data-table tr:hover td {
-  background-color: #f9fafc;
 }
 
 .tag {
-  background-color: #ecf5ff;
-  border: 1px solid #d9ecff;
+  display: inline-block;
+  padding: 4px 12px;
+  background: #ecf5ff;
   color: #409eff;
-  padding: 4px 10px;
   border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
+  font-size: 13px;
 }
 
 .empty-state {
   text-align: center;
-  padding: 40px 0;
-  color: #999;
-  font-size: 14px;
+  padding: 60px 20px;
+  color: #909399;
 }
 
+/* --- 弹窗样式 --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
 
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  width: 480px;
+  max-width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #909399;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.modal-close:hover {
+  color: #606266;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.form-item {
+  margin-bottom: 18px;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.form-item .required {
+  color: #f56c6c;
+  margin-left: 4px;
+}
+
+.form-item input,
+.form-item select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-item input:focus,
+.form-item select:focus {
+  outline: none;
+  border-color: #409eff;
+  box-shadow: 0 0 3px rgba(64, 158, 255, 0.3);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #ebeef5;
+}
+
+.btn-cancel {
+  background: #fff;
+  color: #606266;
+  padding: 10px 20px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn-cancel:hover {
+  border-color: #409eff;
+  color: #409eff;
+}
+
+.btn-confirm {
+  background: #409eff;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn-confirm:hover:not(:disabled) {
+  background: #66b1ff;
+}
+.btn-confirm:disabled {
+  background: #a0cfff;
+  cursor: not-allowed;
+}
 </style>

@@ -209,8 +209,17 @@ const switchTab = (tab) => {
 const closeTab = (tab) => {
   const index = tabs.value.findIndex(t => t.path === tab.path)
   if (index > -1) {
+    // 清除该页面的状态
+    delete tabStates.value[tab.path]
+    
+    // 从缓存组件中移除，销毁组件实例
+    const componentName = getComponentName(tab.path)
+    const cachedIndex = cachedComponents.value.indexOf(componentName)
+    if (cachedIndex > -1) {
+      cachedComponents.value.splice(cachedIndex, 1)
+    }
+    
     tabs.value.splice(index, 1)
-    updateCachedComponents()
     
     if (currentPath.value === tab.path) {
       const nextTab = tabs.value[index] || tabs.value[index - 1]

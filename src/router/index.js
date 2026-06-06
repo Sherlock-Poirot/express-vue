@@ -67,7 +67,7 @@ const routes = [
       {
         path: "settlement/employee",
         name: "StaffIndex",
-        component: () => import("../views/staff.vue"),
+        component: () => import("../views/Staff.vue"),
         meta: { title: "员工管理" },
       },
       
