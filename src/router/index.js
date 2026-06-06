@@ -8,6 +8,7 @@ import Login from "../views/Login.vue";
 import Layout from "../views/Layout.vue";
 import UserManage from "../views/UserManage.vue";
 import RoleManage from "../views/RoleManage.vue";
+import Menu from "../views/Menu.vue";
 import Profile from "../views/Profile.vue";
 import ComingSoon from "../views/ComingSoon.vue";
 import { getToken } from "../utils/auth";
@@ -41,7 +42,7 @@ const routes = [
       {
         path: "system/menu",
         name: "MenuManage",
-        component: ComingSoon,
+        component: Menu,
         meta: { title: "菜单管理" },
       },
       
