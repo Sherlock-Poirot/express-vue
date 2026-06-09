@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-import router from "./router";
+import router, { handleAuthError } from "./router";
 import { $confirm, $msg } from "./utils/confirm";
 import axios from "axios";
 import "./assets/css/global.css";
@@ -47,10 +47,12 @@ axios.interceptors.response.use(
     if (err.config && err.config.responseType === 'blob') {
       return Promise.reject(err);
     }
-    // 401 未登录，跳转到登录页
-    if (err.response && err.response.status === 401) {
-      clearAuth();
-      router.push('/login');
+    // 处理401和403认证错误
+    if (err.response && err.response.status) {
+      const status = err.response.status;
+      if (handleAuthError(status)) {
+        return Promise.reject('Auth error');
+      }
     }
     const msg = err?.response?.data?.message || err.message || "服务异常";
     $msg.error(msg);

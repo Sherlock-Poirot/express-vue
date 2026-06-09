@@ -35,6 +35,7 @@
     <!-- 第二行：功能按钮 单独一行 -->
     <div class="action-toolbar">
       <button class="search-btn" @click="openImport">导入Excel</button>
+      <button class="search-btn" @click="doClean">数据清洗</button>
       <button class="search-btn" @click="doCalculate">执行计算</button>
       <button class="search-btn" @click="doGenerateSummary">
         生成汇总账单
@@ -178,9 +179,17 @@ const saveTabState = inject('saveTabState');
 const getTabState = inject('getTabState');
 const currentPath = '/settlement/bill';
 
+const getLastMonth = () => {
+  const date = new Date();
+  date.setMonth(date.getMonth() - 1);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
 const query = reactive({
   dimension: "time",
-  billMonth: "",
+  billMonth: getLastMonth(),
   customerName: "",
   billType: 1,
   pageNo: 1,
@@ -373,8 +382,54 @@ onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer);
 });
 
-function doCalculate() {
-  console.log("执行计算");
+async function doClean() {
+  const loading = ElLoading.service({
+    lock: true,
+    text: "正在清洗数据...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
+  try {
+    const params = {};
+    if (query.billMonth) {
+      params.date = query.billMonth;
+    }
+    const res = await axios.post("/api/waybill/clean", null, { params });
+    if (res.data.code === 200) {
+      ElMessage.success(res.data.message || "数据清洗成功");
+    } else {
+      ElMessage.error(res.data.message || "数据清洗失败");
+    }
+  } catch (err) {
+    console.error("数据清洗失败", err);
+    ElMessage.error("数据清洗失败，请稍后重试");
+  } finally {
+    loading.close();
+  }
+}
+
+async function doCalculate() {
+  const loading = ElLoading.service({
+    lock: true,
+    text: "正在执行计算...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
+  try {
+    const params = {};
+    if (query.billMonth) {
+      params.date = query.billMonth;
+    }
+    const res = await axios.post("/api/waybill/calculate", null, { params });
+    if (res.data.code === 200) {
+      ElMessage.success(res.data.message || "计算成功");
+    } else {
+      ElMessage.error(res.data.message || "计算失败");
+    }
+  } catch (err) {
+    console.error("计算失败", err);
+    ElMessage.error("计算失败，请稍后重试");
+  } finally {
+    loading.close();
+  }
 }
 
 async function doGenerateSummary() {
