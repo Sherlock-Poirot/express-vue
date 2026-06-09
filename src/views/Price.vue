@@ -125,13 +125,13 @@
           <table>
             <thead>
               <tr style="position: relative">
-                <th width="100">开始日期</th>
-                <th width="100">结束日期</th>
-                <th width="90">预付款</th>
-                <th>区域</th>
-                <th v-for="w in group.weightHeaders" :key="w">{{ w }}</th>
-                <th width="100">首重价格</th>
-                <th width="100">续重价格</th>
+                <th width="80">开始日期</th>
+                <th width="80">结束日期</th>
+                <th width="70">预付款</th>
+                <th width="60">区域</th>
+                <th width="60" v-for="w in group.weightHeaders" :key="w">{{ w }}</th>
+                <th width="70">首重价格</th>
+                <th width="70">续重价格</th>
               </tr>
             </thead>
             <tbody>
@@ -1537,9 +1537,9 @@ td {
 .modal-content {
   background: #fff;
   padding: 28px;
-  width: 95%;
-  max-width: 1200px;
-  max-height: 90vh;
+  width: 98%;
+  max-width: 1400px;
+  max-height: 92vh;
   border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   overflow: auto;
