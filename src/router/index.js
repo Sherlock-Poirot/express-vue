@@ -11,7 +11,8 @@ import RoleManage from "../views/RoleManage.vue";
 import Menu from "../views/Menu.vue";
 import Profile from "../views/Profile.vue";
 import ComingSoon from "../views/ComingSoon.vue";
-import { getToken } from "../utils/auth";
+import Error403 from "../views/Error403.vue";
+import { getToken, removeToken, removeUser } from "../utils/auth";
 
 const routes = [
   {
@@ -19,6 +20,12 @@ const routes = [
     name: "Login",
     component: Login,
     meta: { title: "登录", requiresAuth: false }
+  },
+  {
+    path: "/403",
+    name: "Error403",
+    component: Error403,
+    meta: { title: "无权限", requiresAuth: false }
   },
   {
     path: "/",
@@ -100,7 +107,6 @@ const router = createRouter({
   routes,
 });
 
-// 路由守卫
 router.beforeEach((to, from, next) => {
   const baseTitle = "天晨快递财务系统";
   if (to.meta.title) {
@@ -110,16 +116,26 @@ router.beforeEach((to, from, next) => {
   }
 
   const token = getToken();
-  // 检查是否需要认证
   if (to.meta.requiresAuth !== false && !token) {
-    // 需要认证但未登录，跳转到登录页
     next("/login");
   } else if (to.path === "/login" && token) {
-    // 已登录用户访问登录页，跳转到首页
     next("/");
   } else {
     next();
   }
 });
+
+export const handleAuthError = (errorCode) => {
+  if (errorCode === 401) {
+    removeToken();
+    removeUser();
+    router.push("/login");
+    return true;
+  } else if (errorCode === 403) {
+    router.push("/403");
+    return true;
+  }
+  return false;
+};
 
 export default router;
