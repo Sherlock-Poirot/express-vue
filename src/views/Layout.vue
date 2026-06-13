@@ -251,7 +251,8 @@ const getComponentName = (path) => {
     '/area': 'Area',
     '/profile': 'Profile',
     '/report/profit': 'ProfitReport',
-    '/report/policy': 'Policy'
+    '/report/policy': 'Policy',
+    '/report/cost': 'CostManagement'
   }
   return pathMap[path] || ''
 }

@@ -40,6 +40,10 @@
         <span class="summary-value">{{ summary.totalRebate }}</span>
       </div>
       <div class="summary-item">
+        <span class="summary-label">基数返利（估算）</span>
+        <span class="summary-value">{{ summary.estimatedRebateAmount }}</span>
+      </div>
+      <div class="summary-item">
         <span class="summary-label">政策固定收费</span>
         <span class="summary-value">{{ summary.fixedPolicyFee }}</span>
       </div>
@@ -155,6 +159,7 @@ const summary = reactive({
   totalAmount: '0.00',
   totalFee: '0.00',
   totalRebate: '0.00',
+  estimatedRebateAmount: '0.00',
   fixedPolicyFee: '0.00',
   totalProfit: '0.00',
 });
@@ -240,6 +245,7 @@ async function doSearch() {
       summary.totalAmount = data.totalAmount ? data.totalAmount.toString() : '0.00';
       summary.totalFee = data.totalCustomerFee ? data.totalCustomerFee.toString() : '0.00';
       summary.totalRebate = data.totalRebateAmount ? data.totalRebateAmount.toString() : '0.00';
+      summary.estimatedRebateAmount = data.estimatedRebateAmount ? data.estimatedRebateAmount.toString() : '0.00';
       summary.fixedPolicyFee = data.fixedPolicyFee ? data.fixedPolicyFee.toString() : '0.00';
       summary.totalProfit = data.totalProfit ? data.totalProfit.toString() : '0.00';
     } else {

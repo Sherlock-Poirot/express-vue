@@ -91,6 +91,12 @@ const routes = [
         component: Policy,
         meta: { title: "政策管理" },
       },
+      {
+        path: "report/cost",
+        name: "CostManagement",
+        component: () => import("../views/CostManagement.vue"),
+        meta: { title: "成本管理" },
+      },
       
       {
         path: "area",
