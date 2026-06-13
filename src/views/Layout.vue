@@ -249,7 +249,9 @@ const getComponentName = (path) => {
     '/system/user': 'UserManage',
     '/system/role': 'RoleManage',
     '/area': 'Area',
-    '/profile': 'Profile'
+    '/profile': 'Profile',
+    '/report/profit': 'ProfitReport',
+    '/report/policy': 'Policy'
   }
   return pathMap[path] || ''
 }

@@ -6,9 +6,6 @@
         <input type="date" v-model="query.date" />
       </div>
       <button class="search-btn" @click="doSearch">查询</button>
-    </div>
-
-    <div class="action-toolbar">
       <button class="search-btn" @click="openUpload">数据上传</button>
       <button class="search-btn" @click="doSyncAndCalculate">清洗计算</button>
     </div>
@@ -42,6 +39,10 @@
         <span class="summary-label">总返利</span>
         <span class="summary-value">{{ summary.totalRebate }}</span>
       </div>
+      <div class="summary-item">
+        <span class="summary-label">政策固定收费</span>
+        <span class="summary-value">{{ summary.fixedPolicyFee }}</span>
+      </div>
       <div class="summary-item highlight">
         <span class="summary-label">总盈利</span>
         <span class="summary-value profit">{{ summary.totalProfit }}</span>
@@ -74,7 +75,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(item, index) in tableData" :key="index">
+          <tr v-for="(item, index) in tableData" :key="index" :class="{ 'even-row': index % 2 === 0 }">
             <td>{{ item.customerName }}</td>
 
             <td>{{ item.totalCount }}</td>
@@ -154,6 +155,7 @@ const summary = reactive({
   totalAmount: '0.00',
   totalFee: '0.00',
   totalRebate: '0.00',
+  fixedPolicyFee: '0.00',
   totalProfit: '0.00',
 });
 
@@ -238,6 +240,7 @@ async function doSearch() {
       summary.totalAmount = data.totalAmount ? data.totalAmount.toString() : '0.00';
       summary.totalFee = data.totalCustomerFee ? data.totalCustomerFee.toString() : '0.00';
       summary.totalRebate = data.totalRebateAmount ? data.totalRebateAmount.toString() : '0.00';
+      summary.fixedPolicyFee = data.fixedPolicyFee ? data.fixedPolicyFee.toString() : '0.00';
       summary.totalProfit = data.totalProfit ? data.totalProfit.toString() : '0.00';
     } else {
       ElMessage.error(summaryRes.data.message || "获取汇总数据失败");
@@ -328,13 +331,6 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-
-.action-toolbar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
@@ -457,6 +453,10 @@ td {
   font-size: 13px;
   color: #666;
   white-space: nowrap;
+}
+
+tbody tr.even-row {
+  background-color: #f5f7fa;
 }
 
 tbody tr:hover {

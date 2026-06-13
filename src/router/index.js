@@ -12,6 +12,7 @@ import Menu from "../views/Menu.vue";
 import Profile from "../views/Profile.vue";
 import ComingSoon from "../views/ComingSoon.vue";
 import Error403 from "../views/Error403.vue";
+import Policy from "../views/Policy.vue";
 import { getToken, removeToken, removeUser } from "../utils/auth";
 
 const routes = [
@@ -83,6 +84,12 @@ const routes = [
         name: "ProfitReport",
         component: () => import("../views/ProfitReport.vue"),
         meta: { title: "量本利报表" },
+      },
+      {
+        path: "report/policy",
+        name: "Policy",
+        component: Policy,
+        meta: { title: "政策管理" },
       },
       
       {

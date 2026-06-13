@@ -101,6 +101,7 @@
             ref="menuTreeRef"
             :data="menuTreeData"
             :props="menuTreeProps"
+            :default-checked-keys="defaultCheckedKeys"
             node-key="id"
             show-checkbox
             default-expand-all
@@ -123,7 +124,7 @@ defineOptions({
   name: 'RoleManage'
 })
 
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import axios from 'axios'
@@ -148,6 +149,7 @@ const menuTreeProps = {
   children: 'children',
   label: 'menuName'
 }
+const defaultCheckedKeys = ref([])
 
 const searchForm = reactive({
   roleName: ''
@@ -199,33 +201,16 @@ const getAllMenus = async () => {
 
 const getRoleMenus = async (roleId) => {
   try {
-    const res = await axios.get(`/api/role-menu/menus/${roleId}`)
+    const res = await axios.get(`/api/role-menu/menu-ids/${roleId}`)
     if (res.data.code === 200) {
-      // 提取所有菜单ID
-      const menuIds = []
-      const extractIds = (nodes) => {
-        nodes.forEach(node => {
-          menuIds.push(node.id)
-          if (node.children && node.children.length > 0) {
-            extractIds(node.children)
-          }
-        })
-      }
-      extractIds(res.data.data || [])
-      
-      // 设置勾选状态
-      nextTick(() => {
-        if (menuTreeRef.value) {
-          menuTreeRef.value.setCheckedKeys(menuIds)
-        }
-      })
+      // 设置默认选中的菜单ID，树渲染时会自动选中
+      defaultCheckedKeys.value = res.data.data || []
     }
   } catch (err) {
     console.error('获取角色菜单失败:', err)
+    defaultCheckedKeys.value = []
   }
 }
-
-import { nextTick } from 'vue'
 
 const resetSearch = () => {
   searchForm.roleName = ''
@@ -298,14 +283,14 @@ const handleDelete = async (row) => {
 // 菜单授权功能
 const handleMenuAuth = async (row) => {
   currentAuthRoleId.value = row.id
+  
+  // 先获取角色已分配的菜单ID
+  await getRoleMenus(row.id)
+  
+  // 再获取所有菜单树
   await getAllMenus()
   
-  // 清空选中状态
-  if (menuTreeRef.value) {
-    menuTreeRef.value.setCheckedKeys([])
-  }
-  
-  await getRoleMenus(row.id)
+  // 打开弹窗（此时树会根据 defaultCheckedKeys 自动选中）
   menuAuthDialogVisible.value = true
 }
 
