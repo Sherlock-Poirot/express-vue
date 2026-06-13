@@ -81,7 +81,7 @@ const routes = [
       {
         path: "report/profit",
         name: "ProfitReport",
-        component: ComingSoon,
+        component: () => import("../views/ProfitReport.vue"),
         meta: { title: "量本利报表" },
       },
       
