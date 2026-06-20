@@ -44,11 +44,15 @@
         <span class="summary-value">{{ summary.estimatedRebateAmount }}</span>
       </div>
       <div class="summary-item">
+        <span class="summary-label">动态返利（估算）</span>
+        <span class="summary-value">{{ summary.dynamicRebateAmount }}</span>
+      </div>
+      <div class="summary-item">
         <span class="summary-label">政策固定收费</span>
         <span class="summary-value">{{ summary.fixedPolicyFee }}</span>
       </div>
       <div class="summary-item highlight">
-        <span class="summary-label">总盈利</span>
+        <span class="summary-label">毛利</span>
         <span class="summary-value profit">{{ summary.totalProfit }}</span>
       </div>
     </div>
@@ -74,8 +78,7 @@
             <th>日环比</th>
             <th>成本</th>
             <th>客户中转费</th>
-            <th>返利</th>
-            <th>盈利</th>
+            <th>毛利</th>
           </tr>
         </thead>
         <tbody>
@@ -98,7 +101,6 @@
             <td :class="{ 'highlight-dayratio': item.dayOnDayRatio && item.dayOnDayRatio < 0 }">{{ formatPercent(item.dayOnDayRatio) }}</td>
             <td>{{ item.totalAmount }}</td>
             <td>{{ item.customerFee }}</td>
-            <td>{{ item.rebateAmount }}</td>
             <td>{{ item.profit }}</td>
           </tr>
         </tbody>
@@ -160,6 +162,7 @@ const summary = reactive({
   totalFee: '0.00',
   totalRebate: '0.00',
   estimatedRebateAmount: '0.00',
+  dynamicRebateAmount: '0.00',
   fixedPolicyFee: '0.00',
   totalProfit: '0.00',
 });
@@ -246,6 +249,7 @@ async function doSearch() {
       summary.totalFee = data.totalCustomerFee ? data.totalCustomerFee.toString() : '0.00';
       summary.totalRebate = data.totalRebateAmount ? data.totalRebateAmount.toString() : '0.00';
       summary.estimatedRebateAmount = data.estimatedRebateAmount ? data.estimatedRebateAmount.toString() : '0.00';
+      summary.dynamicRebateAmount = data.dynamicRebateAmount ? data.dynamicRebateAmount.toString() : '0.00';
       summary.fixedPolicyFee = data.fixedPolicyFee ? data.fixedPolicyFee.toString() : '0.00';
       summary.totalProfit = data.totalProfit ? data.totalProfit.toString() : '0.00';
     } else {
@@ -274,8 +278,13 @@ async function submitUpload() {
     return;
   }
 
+  const loading = ElLoading.service({
+    lock: true,
+    text: "上传中...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
+
   try {
-    uploading.value = true;
     closeUpload();
 
     const formData = new FormData();
@@ -290,7 +299,7 @@ async function submitUpload() {
   } catch (err) {
     ElMessage.error("上传失败：" + (err.message || err));
   } finally {
-    uploading.value = false;
+    loading.close();
   }
 }
 

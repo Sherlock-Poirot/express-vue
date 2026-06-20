@@ -106,6 +106,7 @@
             <th>客户编码</th>
             <th>客户名称</th>
             <th>店铺名称</th>
+            <th>店铺ID</th>
             <th>平台</th>
             <th>直营/承包</th>
             <th>类型</th>
@@ -120,6 +121,7 @@
             <td>{{ item.code }}</td>
             <td>{{ item.custName }}</td>
             <td>{{ item.shopName }}</td>
+            <td>{{ item.shopId }}</td>
             <td>{{ item.platform }}</td>
             <td>{{ item.empName }}</td>
             <td>{{ item.empType }}</td>
@@ -231,6 +233,11 @@
             </div>
 
             <div class="form-item">
+              <label><span class="red">*</span>店铺ID：</label>
+              <input v-model="form.shopId" placeholder="请输入" />
+            </div>
+
+            <div class="form-item">
               <label>平台：</label>
               <select v-model="form.platform">
                 <option value="">请选择</option>
@@ -309,6 +316,7 @@ const showModal = ref(false);
 const title = ref("新增店铺");
 const form = reactive({
   id: "",
+  shopId: "",
   code: "",
   name: "",
   shopName: "",
@@ -472,6 +480,7 @@ function handleAdd() {
   title.value = "新增店铺";
   showModal.value = true;
   form.id = "";
+  form.shopId = "";
   form.code = "";
   form.name = "";
   form.shopName = "";
@@ -484,6 +493,7 @@ function handleEdit(row) {
   title.value = "编辑店铺";
   showModal.value = true;
   form.id = row.id;
+  form.shopId = row.shopId || "";
   form.code = row.code;
   form.name = row.custName;
   form.shopName = row.shopName;
@@ -497,6 +507,10 @@ function closeModal() {
 }
 
 async function save() {
+  if (!form.shopId) {
+    proxy.$msg("请输入店铺ID");
+    return;
+  }
   if (!form.code) {
     proxy.$msg("请输入客户编码");
     return;
@@ -513,6 +527,7 @@ async function save() {
   try {
     const submitData = {
       id: form.id,
+      shopId: form.shopId,
       code: form.code,
       custName: form.name,
       shopName: form.shopName,

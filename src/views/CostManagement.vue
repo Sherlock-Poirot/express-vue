@@ -2,34 +2,29 @@
   <div class="cost-management-page">
     <div class="toolbar">
       <div class="search-section">
+        <input type="month" v-model="query.month" class="search-input" />
         <select v-model="query.costType" class="search-select">
           <option value="">全部类型</option>
           <option v-for="item in costTypeOptions" :key="item.value" :value="item.value">
             {{ item.label }}
           </option>
         </select>
-        <button class="btn btn-search" @click="loadCostList">查询</button>
+        <button class="btn btn-primary" @click="handleSearch">查询</button>
+        <button class="btn btn-primary" @click="openAddModal">新增成本</button>
+        <button class="btn btn-delete-batch" @click="handleBatchDelete" :disabled="selectedIds.length === 0">
+          批量删除
+        </button>
       </div>
-      <button class="btn btn-primary" @click="openAddModal">新增成本</button>
     </div>
 
-    <div class="summary-section">
-      <div class="summary-card">
-        <div class="summary-item total">
-          <span class="summary-label">总成本</span>
-          <span class="summary-value">{{ totalCost }}</span>
-        </div>
+    <div class="summary-card">
+      <div class="summary-item" v-for="item in typeSummary" :key="item.costType">
+        <span class="summary-label">{{ item.costTypeName }}</span>
+        <span class="summary-value">{{ formatAmount(item.totalAmount) }}</span>
       </div>
-      
-      <div class="type-summary">
-        <div 
-          v-for="item in typeSummary" 
-          :key="item.costType" 
-          class="type-item"
-        >
-          <span class="type-name">{{ item.costTypeName }}</span>
-          <span class="type-amount">{{ formatAmount(item.totalAmount) }}</span>
-        </div>
+      <div class="summary-item highlight">
+        <span class="summary-label">总成本</span>
+        <span class="summary-value total-cost">{{ totalCost }}</span>
       </div>
     </div>
 
@@ -37,7 +32,10 @@
       <table>
         <thead>
           <tr>
-            <th>ID</th>
+            <th class="checkbox-column">
+              <input type="checkbox" v-model="selectAll" @change="handleSelectAll" />
+            </th>
+            <th>月份</th>
             <th>成本类型</th>
             <th>成本名称</th>
             <th>金额</th>
@@ -48,7 +46,10 @@
         </thead>
         <tbody>
           <tr v-for="item in costList" :key="item.id">
-            <td>{{ item.id }}</td>
+            <td class="checkbox-column">
+              <input type="checkbox" :checked="selectedIds.includes(item.id)" @change="handleRowSelect(item.id, $event.target.checked)" />
+            </td>
+            <td>{{ item.month || '-' }}</td>
             <td>{{ getCostTypeName(item.costType) }}</td>
             <td>{{ item.costName }}</td>
             <td>{{ formatAmount(item.amount) }}</td>
@@ -60,7 +61,7 @@
             </td>
           </tr>
           <tr v-if="costList.length === 0">
-            <td colspan="7" class="empty">暂无数据</td>
+            <td colspan="8" class="empty">暂无数据</td>
           </tr>
         </tbody>
       </table>
@@ -73,6 +74,10 @@
           <span class="close-btn" @click="closeModal">×</span>
         </div>
         <div class="modal-body">
+          <div class="form-group">
+            <label>月份：</label>
+            <input type="month" v-model="form.month" class="form-input" />
+          </div>
           <div class="form-group">
             <label>成本类型：</label>
             <select v-model="form.costType" class="form-select">
@@ -115,6 +120,7 @@ const costTypeOptions = [
   { value: 3, label: '操作成本' },
   { value: 4, label: '运能成本' },
   { value: 5, label: '折旧成本' },
+  { value: 6, label: '其他' },
 ];
 
 const getCostTypeName = (type) => {
@@ -122,7 +128,15 @@ const getCostTypeName = (type) => {
   return option ? option.label : '未知';
 };
 
+const getCurrentMonth = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
 const query = reactive({
+  month: getCurrentMonth(),
   costType: '',
 });
 
@@ -130,11 +144,15 @@ const costList = ref([]);
 const typeSummary = ref([]);
 const totalCost = ref('0.00');
 
+const selectedIds = ref([]);
+const selectAll = ref(false);
+
 const modalVisible = ref(false);
 const isEdit = ref(false);
 const editingId = ref(null);
 
 const form = reactive({
+  month: '',
   costType: '',
   costName: '',
   amount: '',
@@ -152,13 +170,21 @@ const formatDateTime = (dateTime) => {
   return dateTime.replace('T', ' ').substring(0, 19);
 };
 
+const handleSearch = async () => {
+  await loadCostList();
+  await loadSummary();
+};
+
 const loadCostList = async () => {
   try {
     const params = {};
+    if (query.month) {
+      params.month = query.month;
+    }
     if (query.costType) {
       params.costType = query.costType;
     }
-    const res = await axios.get('/api/cost', { params });
+    const res = await axios.get('/api/cost/list', { params });
     if (res.data.code === 200) {
       costList.value = res.data.data;
     } else {
@@ -172,20 +198,59 @@ const loadCostList = async () => {
 
 const loadSummary = async () => {
   try {
-    const [typeRes, totalRes] = await Promise.all([
-      axios.get('/api/cost/sum'),
-      axios.get('/api/cost/sum/total'),
-    ]);
-    
-    if (typeRes.data.code === 200) {
-      typeSummary.value = typeRes.data.data;
-    }
-    
-    if (totalRes.data.code === 200) {
-      totalCost.value = formatAmount(totalRes.data.data);
+    const month = query.month;
+    const res = await axios.get(`/api/cost/summary/${month}`);
+    if (res.data.code === 200) {
+      const data = res.data.data;
+      typeSummary.value = data.typeSummaryList || [];
+      totalCost.value = formatAmount(data.totalAmount);
+    } else {
+      ElMessage.error(res.data.message || '获取汇总数据失败');
     }
   } catch (err) {
     console.error('获取汇总数据失败', err);
+    ElMessage.error('获取汇总数据失败，请稍后重试');
+  }
+};
+
+const handleSelectAll = (event) => {
+  const checked = event.target.checked;
+  if (checked) {
+    selectedIds.value = costList.value.map(item => item.id);
+  } else {
+    selectedIds.value = [];
+  }
+};
+
+const handleRowSelect = (id, checked) => {
+  if (checked) {
+    if (!selectedIds.value.includes(id)) {
+      selectedIds.value.push(id);
+    }
+  } else {
+    selectedIds.value = selectedIds.value.filter(itemId => itemId !== id);
+  }
+};
+
+const handleBatchDelete = async () => {
+  if (selectedIds.value.length === 0) {
+    ElMessage.warning('请选择要删除的记录');
+    return;
+  }
+
+  try {
+    const res = await axios.delete('/api/cost/batch/delete', { data: selectedIds.value });
+    if (res.data.code === 200) {
+      ElMessage.success('批量删除成功');
+      selectedIds.value = [];
+      selectAll.value = false;
+      await handleSearch();
+    } else {
+      ElMessage.error(res.data.message || '批量删除失败');
+    }
+  } catch (err) {
+    console.error('批量删除失败', err);
+    ElMessage.error('批量删除失败，请稍后重试');
   }
 };
 
@@ -193,12 +258,14 @@ const openAddModal = () => {
   isEdit.value = false;
   editingId.value = null;
   resetForm();
+  form.month = query.month; // 默认使用查询的月份
   modalVisible.value = true;
 };
 
 const openEditModal = (item) => {
   isEdit.value = true;
   editingId.value = item.id;
+  form.month = item.month || '';
   form.costType = item.costType;
   form.costName = item.costName;
   form.amount = item.amount;
@@ -212,6 +279,7 @@ const closeModal = () => {
 };
 
 const resetForm = () => {
+  form.month = '';
   form.costType = '';
   form.costName = '';
   form.amount = '';
@@ -219,6 +287,10 @@ const resetForm = () => {
 };
 
 const submitForm = async () => {
+  if (!form.month) {
+    ElMessage.warning('请选择月份');
+    return;
+  }
   if (!form.costType) {
     ElMessage.warning('请选择成本类型');
     return;
@@ -234,6 +306,7 @@ const submitForm = async () => {
 
   try {
     const data = {
+      month: form.month,
       costType: Number(form.costType),
       costName: form.costName,
       amount: Number(form.amount),
@@ -248,7 +321,7 @@ const submitForm = async () => {
         ElMessage.error(res.data.message || '修改失败');
       }
     } else {
-      const res = await axios.post('/api/cost', data);
+      const res = await axios.post('/api/cost/create', data);
       if (res.data.code === 200) {
         ElMessage.success('添加成功');
       } else {
@@ -319,18 +392,18 @@ onMounted(() => {
   border-radius: 6px;
 }
 
+.search-input {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
 .btn {
   padding: 6px 16px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-}
-
-.btn-search {
-  background: #f5f7fa;
-  color: #666;
-  border: 1px solid #ddd;
 }
 
 .btn-primary {
@@ -353,6 +426,23 @@ onMounted(() => {
   font-size: 12px;
 }
 
+.btn-delete-batch {
+  background: #ff4d4f;
+  color: #fff;
+}
+
+.btn-delete-batch:disabled {
+  background: #ff4d4f;
+  color: #fff;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkbox-column {
+  width: 40px;
+  text-align: center;
+}
+
 .btn-cancel {
   background: #f5f7fa;
   color: #666;
@@ -364,60 +454,50 @@ onMounted(() => {
   color: #fff;
 }
 
-.summary-section {
-  margin-bottom: 20px;
-}
-
 .summary-card {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
   background: #fff;
   border-radius: 8px;
-  padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .summary-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  min-width: 100px;
+  padding: 8px 16px;
+  border-right: 1px solid #f0f0f0;
 }
 
-.summary-item.total .summary-label {
-  font-size: 16px;
-  color: #666;
+.summary-item:last-child {
+  border-right: none;
 }
 
-.summary-item.total .summary-value {
-  font-size: 28px;
-  font-weight: 600;
-  color: #1890ff;
-}
-
-.type-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-}
-
-.type-item {
-  background: #fff;
+.summary-item.highlight {
+  background: linear-gradient(135deg, #e6f7ff 0%, #fff 100%);
   border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 12px 20px;
+  border-right: none;
 }
 
-.type-name {
-  font-size: 14px;
-  color: #666;
+.summary-label {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 4px;
 }
 
-.type-amount {
+.summary-value {
   font-size: 18px;
   font-weight: 600;
   color: #333;
+}
+
+.summary-value.total-cost {
+  color: #fa8c16;
 }
 
 .table-container {
