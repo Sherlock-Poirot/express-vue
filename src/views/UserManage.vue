@@ -83,7 +83,7 @@
     >
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="账号" prop="username">
-          <el-input v-model="form.username" :disabled="isEdit" placeholder="请输入账号" />
+          <el-input v-model="form.username" placeholder="请输入账号" />
         </el-form-item>
         <el-form-item label="密码" prop="password" v-if="!isEdit">
           <el-input v-model="form.password" type="password" placeholder="请输入密码" />

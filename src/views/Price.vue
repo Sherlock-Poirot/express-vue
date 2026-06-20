@@ -243,7 +243,7 @@
           </div>
           <div class="form-item">
             <label>客户编码：</label>
-            <input v-model="editForm.kcode" :disabled="!kcodeEditable" />
+            <input v-model="editForm.kcode" />
           </div>
           <div class="form-item">
             <label>海南三区：</label>

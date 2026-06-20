@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../views/Home.vue";
+import Dashboard from "../views/Dashboard.vue";
 import Price from "../views/Price.vue";
 import Bill from "../views/Bill.vue";
 import Area from "../views/Area.vue";
@@ -33,7 +34,8 @@ const routes = [
     component: Layout,
     meta: { requiresAuth: true },
     children: [
-      { path: "", name: "Home", component: Home, meta: { title: "首页" } },
+      { path: "dashboard", name: "Dashboard", component: Dashboard, meta: { title: "数据大屏" } },
+      { path: "", redirect: "/dashboard" },
       
       {
         path: "system/user",
@@ -120,7 +122,7 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const baseTitle = "天晨快递财务系统";
   if (to.meta.title) {
     document.title = `${to.meta.title} - ${baseTitle}`;
@@ -130,11 +132,9 @@ router.beforeEach((to, from, next) => {
 
   const token = getToken();
   if (to.meta.requiresAuth !== false && !token) {
-    next("/login");
+    return "/login";
   } else if (to.path === "/login" && token) {
-    next("/");
-  } else {
-    next();
+    return "/";
   }
 });
 

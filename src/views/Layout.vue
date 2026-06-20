@@ -106,11 +106,7 @@
       </div>
       
       <el-main class="main-content">
-        <router-view v-slot="{ Component }">
-          <keep-alive :include="cachedComponents">
-            <component :is="Component" :key="currentPath" />
-          </keep-alive>
-        </router-view>
+        <router-view />
       </el-main>
     </el-container>
   </el-container>
@@ -241,7 +237,7 @@ const updateCachedComponents = () => {
 
 const getComponentName = (path) => {
   const pathMap = {
-    '/': 'Home',
+    '/': 'Dashboard',
     '/settlement/price': 'Price',
     '/settlement/shop': 'Shop',
     '/settlement/bill': 'Bill',
@@ -252,7 +248,8 @@ const getComponentName = (path) => {
     '/profile': 'Profile',
     '/report/profit': 'ProfitReport',
     '/report/policy': 'Policy',
-    '/report/cost': 'CostManagement'
+    '/report/cost': 'CostManagement',
+    '/dashboard': 'Dashboard'
   }
   return pathMap[path] || ''
 }
@@ -321,16 +318,19 @@ const handleCommand = async (command) => {
 onMounted(() => {
   fetchMenuTree()
   fetchCurrentUser()
-  
-  if (currentPath.value !== '/') {
+
+  // 确保首页 tab 始终存在
+  if (!tabs.value.find(tab => tab.path === '/')) {
     const homeTab = { path: '/', menuName: '首页', id: 'home' }
     tabs.value.push(homeTab)
+    updateCachedComponents()
   }
 })
 
 watch(() => route.path, (newPath) => {
   if (newPath === '/' && tabs.value.length === 0) {
-    tabs.value.push({ path: '/', menuName: '首页', id: 'home' })
+    const homeTab = { path: '/', menuName: '首页', id: 'home' }
+    tabs.value.push(homeTab)
     updateCachedComponents()
   }
 })
