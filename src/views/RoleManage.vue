@@ -9,7 +9,7 @@
 
     <div class="search-box">
       <el-form :inline="true" :model="searchForm">
-        <el-form-item label="角色名称">
+        <el-form-item label="角色名称" v-if="hasBtnPermission('查询角色', '查询')">
           <el-input v-model="searchForm.roleName" placeholder="请输入角色名称" clearable />
         </el-form-item>
         <el-form-item>
