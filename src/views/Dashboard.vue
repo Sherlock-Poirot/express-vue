@@ -44,7 +44,7 @@
         <div class="card-icon">💰</div>
         <div class="card-content">
           <span class="card-label">总成本（元）</span>
-          <span class="card-value">{{ formatMoney(summary.totalAmount) }}</span>
+          <span class="card-value">---</span>
         </div>
       </div>
 
@@ -52,7 +52,7 @@
         <div class="card-icon">📊</div>
         <div class="card-content">
           <span class="card-label">客户中转费（元）</span>
-          <span class="card-value">{{ formatMoney(summary.totalFee) }}</span>
+          <span class="card-value">---</span>
         </div>
       </div>
 
@@ -60,7 +60,7 @@
         <div class="card-icon">🎁</div>
         <div class="card-content">
           <span class="card-label">总返利（元）</span>
-          <span class="card-value">{{ formatMoney(summary.totalRebate) }}</span>
+          <span class="card-value">---</span>
         </div>
       </div>
 
@@ -68,7 +68,7 @@
         <div class="card-icon">💹</div>
         <div class="card-content">
           <span class="card-label">毛利（元）</span>
-          <span class="card-value">{{ formatMoney(summary.totalProfit) }}</span>
+          <span class="card-value">---</span>
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@
     <div class="main-content">
       <div class="left-panel">
         <div class="panel-title">
-          <span class="title-text">客户毛利排行</span>
+          <span class="title-text">发货量排行</span>
         </div>
         <div class="ranking-list">
           <div
@@ -93,10 +93,10 @@
             <div class="profit-bar">
               <div
                 class="profit-fill"
-                :style="{ width: getPercentage(item.profit) + '%' }"
+                :style="{ width: getPercentage(item.totalCount) + '%' }"
               ></div>
             </div>
-            <span class="profit-value">{{ formatMoney(item.profit) }}</span>
+            <span class="profit-value">{{ formatNumber(item.totalCount) }}</span>
           </div>
           <div v-if="topCustomers.length === 0" class="empty-ranking">
             暂无数据
@@ -228,17 +228,17 @@ const isPositive = (ratio) => {
   return ratio.startsWith("+") || !ratio.startsWith("-");
 };
 
-const getPercentage = (profit) => {
-  const maxProfit = topCustomers.value.reduce((max, item) => {
-    return Math.max(max, Number(item.profit) || 0);
+const getPercentage = (count) => {
+  const maxCount = topCustomers.value.reduce((max, item) => {
+    return Math.max(max, Number(item.totalCount) || 0);
   }, 1);
-  if (maxProfit === 0) return 0;
-  return (Number(profit) / maxProfit) * 100;
+  if (maxCount === 0) return 0;
+  return (Number(count) / maxCount) * 100;
 };
 
 const sortCustomers = () => {
   topCustomers.value = [...tableData.value]
-    .sort((a, b) => Number(b.profit) - Number(a.profit))
+    .sort((a, b) => Number(b.totalCount) - Number(a.totalCount))
     .slice(0, 8);
 };
 
