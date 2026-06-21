@@ -118,7 +118,7 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { User, ArrowDown, SwitchButton, Document, Menu, Setting, DataLine, UserFilled, TrendCharts, Folder, Close } from '@element-plus/icons-vue'
-import { getToken, getUser, clearAuth, setUser } from '../utils/auth'
+import { getToken, getUser, clearAuth, setUser, setPermissions, getPermissions } from '../utils/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -278,9 +278,31 @@ const fetchMenuTree = async () => {
   try {
     const res = await axios.get('/api/menu/tree')
     menuList.value = res.data.data || []
+    
+    const permissions = extractPermissions(menuList.value)
+    setPermissions(permissions)
   } catch (err) {
     console.error('获取菜单失败:', err)
   }
+}
+
+const extractPermissions = (menus) => {
+  const perms = []
+  
+  const traverse = (items) => {
+    items.forEach(item => {
+      if (item.menuType === 3) {
+        perms.push(item.menuName)
+      }
+      if (item.children && item.children.length > 0) {
+        traverse(item.children)
+      }
+    })
+  }
+  
+  traverse(menus)
+  console.log('提取的按钮权限列表:', perms)
+  return perms
 }
 
 const fetchCurrentUser = async () => {
@@ -288,6 +310,7 @@ const fetchCurrentUser = async () => {
     const res = await axios.post('/api/auth/current')
     currentUser.value = res.data.data
     setUser(res.data.data)
+    console.log('当前用户信息:', res.data.data)
   } catch (err) {
     console.error('获取用户信息失败:', err)
   }

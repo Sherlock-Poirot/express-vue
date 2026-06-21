@@ -1,5 +1,12 @@
 <template>
   <div class="page-container">
+    <div class="action-bar">
+      <el-button type="primary" @click="getMenuTree" :loading="loading">
+        <el-icon><Refresh /></el-icon>
+        查询
+      </el-button>
+    </div>
+
     <div class="table-box">
       <el-table :data="tableData" v-loading="loading" border :span-method="objectSpanMethod">
         <el-table-column label="菜单权限分类" min-width="200">
@@ -40,6 +47,7 @@ defineOptions({
 
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Refresh } from '@element-plus/icons-vue'
 import axios from 'axios'
 
 const loading = ref(false)

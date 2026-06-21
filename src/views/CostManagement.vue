@@ -10,8 +10,8 @@
           </option>
         </select>
         <button class="btn btn-primary" @click="handleSearch">查询</button>
-        <button class="btn btn-primary" @click="openAddModal">新增成本</button>
-        <button class="btn btn-delete-batch" @click="handleBatchDelete" :disabled="selectedIds.length === 0">
+        <button class="btn btn-primary" @click="openAddModal" v-if="hasBtnPermission('新增成本', '新增')">新增成本</button>
+        <button class="btn btn-delete-batch" @click="handleBatchDelete" :disabled="selectedIds.length === 0" v-if="hasBtnPermission('批量删除', '删除')">
           批量删除
         </button>
       </div>
@@ -56,8 +56,8 @@
             <td>{{ item.remark || '-' }}</td>
             <td>{{ formatDateTime(item.createTime) }}</td>
             <td>
-              <button class="btn btn-edit" @click="openEditModal(item)">编辑</button>
-              <button class="btn btn-delete" @click="handleDelete(item.id)">删除</button>
+              <button class="btn btn-edit" @click="openEditModal(item)" v-if="hasBtnPermission('编辑', '修改')">编辑</button>
+              <button class="btn btn-delete" @click="handleDelete(item.id)" v-if="hasBtnPermission('删除', '移除')">删除</button>
             </td>
           </tr>
           <tr v-if="costList.length === 0">
@@ -113,6 +113,7 @@
 import { ref, reactive, onMounted } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
+import { hasBtnPermission } from "@/utils/auth";
 
 const costTypeOptions = [
   { value: 1, label: '场地成本' },

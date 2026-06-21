@@ -21,10 +21,10 @@
       <button @click="doSearch()" class="search-btn">搜索</button>
 
       <!-- 👇 在这里加【新增】按钮 -->
-      <button @click="openAddCustomerModal" class="add-btn">新增</button>
+      <button @click="openAddCustomerModal" class="add-btn" v-if="hasBtnPermission('新增', '新增客户')">新增</button>
 
       <!-- 👇 批量删除 -->
-      <button @click="handleBatchDelete" class="delete-btn">批量删除</button>
+      <button @click="handleBatchDelete" class="delete-btn" v-if="hasBtnPermission('批量删除', '删除')">批量删除</button>
     </div>
 
     <table>
@@ -83,15 +83,16 @@
           </td>
 
           <td>
-            <button class="edit-btn" @click.stop="toEdit(item)">编辑</button>
+            <button class="edit-btn" @click.stop="toEdit(item)" v-if="hasBtnPermission('编辑', '修改')">编辑</button>
 
             <!-- 👇 新增：新增价格按钮 -->
-            <button class="add-price-btn" @click.stop="openAddPriceModal(item)">
+            <button class="add-price-btn" @click.stop="openAddPriceModal(item)" v-if="hasBtnPermission('新增价格', '新增')">
               新增价格
             </button>
             <button
               class="del-price-btn"
               @click.stop="openDeletePriceModal(item)"
+              v-if="hasBtnPermission('删除价格', '删除')"
             >
               删除价格
             </button>
@@ -574,6 +575,7 @@ defineOptions({
 import { ref, reactive, onMounted, onUnmounted, computed, inject, watch } from "vue";
 import axios from "axios";
 import Pagination from "@/components/Pagination.vue";
+import { hasBtnPermission } from "@/utils/auth";
 
 const saveTabState = inject('saveTabState');
 const getTabState = inject('getTabState');

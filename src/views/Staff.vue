@@ -31,7 +31,7 @@
     <div class="table-card">
       <!-- 操作按钮 -->
       <div class="action-bar">
-        <button class="btn-primary" @click="handleAdd">
+        <button class="btn-primary" @click="handleAdd" v-if="hasBtnPermission('新增', '新增员工')">
           <span class="icon">+</span>
           新增
         </button>
@@ -74,7 +74,7 @@
               <td>{{ item.phone || "—" }}</td>
               <td>{{ item.entryDate }}</td>
               <td class="text-center">
-                <button class="btn-link" @click="handleEdit(item)">编辑</button>
+                <button class="btn-link" @click="handleEdit(item)" v-if="hasBtnPermission('编辑', '修改')">编辑</button>
               </td>
             </tr>
           </tbody>
@@ -159,6 +159,7 @@ import { ref, reactive, computed, onMounted, inject, watch } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
 import Pagination from "@/components/Pagination.vue";
+import { hasBtnPermission } from "@/utils/auth";
 
 const saveTabState = inject('saveTabState');
 const getTabState = inject('getTabState');

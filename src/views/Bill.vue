@@ -34,16 +34,16 @@
 
     <!-- 第二行：功能按钮 单独一行 -->
     <div class="action-toolbar">
-      <button class="search-btn" @click="openImport">导入Excel</button>
-      <button class="search-btn" @click="doClean">数据清洗</button>
-      <button class="search-btn" @click="doCalculate">执行计算</button>
-      <button class="search-btn" @click="doGenerateSummary">
+      <button class="search-btn" @click="openImport" v-if="hasBtnPermission('导入Excel')">导入Excel</button>
+      <button class="search-btn" @click="doClean" v-if="hasBtnPermission('数据清洗')">数据清洗</button>
+      <button class="search-btn" @click="doCalculate" v-if="hasBtnPermission('执行计算')">执行计算</button>
+      <button class="search-btn" @click="doGenerateSummary" v-if="hasBtnPermission('生成汇总账单')">
         生成汇总账单
       </button>
-      <button class="search-btn" @click="doExportSummary">
+      <button class="search-btn" @click="doExportSummary" v-if="hasBtnPermission('汇总导出')">
         汇总导出
       </button>
-      <button class="search-btn" @click="doExportDetail">
+      <button class="search-btn" @click="doExportDetail" v-if="hasBtnPermission('明细导出')">
         明细导出
       </button>
     </div>
@@ -174,6 +174,7 @@ import { ref, reactive, onMounted, onUnmounted, inject, watch } from "vue";
 import axios from "axios";
 import { ElMessage, ElLoading } from "element-plus";
 import Pagination from "@/components/Pagination.vue";
+import { hasBtnPermission } from "@/utils/auth";
 
 const saveTabState = inject('saveTabState');
 const getTabState = inject('getTabState');

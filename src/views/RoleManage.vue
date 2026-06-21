@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="action-bar">
-      <el-button type="primary" @click="handleAdd">
+      <el-button type="primary" @click="handleAdd" v-if="hasBtnPermission('新增角色', '新增')">
         <el-icon><Plus /></el-icon>
         新增角色
       </el-button>
@@ -35,9 +35,9 @@
         <el-table-column prop="sortOrder" label="排序" width="80" />
         <el-table-column label="操作" width="300" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button type="success" size="small" @click="handleMenuAuth(row)">菜单授权</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+            <el-button type="primary" size="small" @click="handleEdit(row)" v-if="hasBtnPermission('编辑角色', '编辑', '修改')">编辑</el-button>
+            <el-button type="success" size="small" @click="handleMenuAuth(row)" v-if="hasBtnPermission('菜单授权', '授权')">菜单授权</el-button>
+            <el-button type="danger" size="small" @click="handleDelete(row)" v-if="hasBtnPermission('删除角色', '删除', '移除')">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -91,22 +91,65 @@
     <el-dialog
       v-model="menuAuthDialogVisible"
       title="菜单授权"
-      width="600px"
+      width="900px"
+      :max-width="'90%'"
+      :resizable="true"
+      :drag="true"
       destroy-on-close
     >
       <div class="menu-auth-container">
         <div class="auth-tip">请选择要分配给该角色的菜单权限：</div>
-        <div class="menu-tree-box">
-          <el-tree
-            ref="menuTreeRef"
-            :data="menuTreeData"
-            :props="menuTreeProps"
-            :default-checked-keys="defaultCheckedKeys"
-            node-key="id"
-            show-checkbox
-            default-expand-all
-            :expand-on-click-node="false"
-          />
+        <div class="menu-table-box">
+          <el-table
+            :data="menuAuthTableData"
+            v-loading="menuAuthLoading"
+            border
+            :span-method="menuAuthSpanMethod"
+            ref="menuAuthTableRef"
+          >
+            <el-table-column label="菜单分类" min-width="180">
+              <template #default="{ row }">
+                <div v-if="row.categoryName" class="category-cell">
+                  <el-checkbox
+                    :model-value="selectedMenuIds.includes(row.categoryId)"
+                    @click.prevent="toggleCategorySelection(row.categoryId)"
+                  >
+                    {{ row.categoryName }}
+                  </el-checkbox>
+                </div>
+                <span v-else></span>
+              </template>
+            </el-table-column>
+            <el-table-column label="菜单名称" min-width="200">
+              <template #default="{ row }">
+                <div v-if="row.menuName" class="menu-cell">
+                  <el-checkbox
+                    :model-value="selectedMenuIds.includes(row.id)"
+                    @click.prevent="toggleMenuSelection(row.id, row.buttons)"
+                  >
+                    {{ row.menuName }}
+                  </el-checkbox>
+                </div>
+                <span v-else>-</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="按钮权限" min-width="350">
+              <template #default="{ row }">
+                <div v-if="row.buttons && row.buttons.length > 0" class="buttons-cell">
+                  <el-checkbox
+                    v-for="btn in row.buttons"
+                    :key="btn.id"
+                    :model-value="selectedMenuIds.includes(btn.id)"
+                    @click.prevent="toggleButtonSelection(btn.id)"
+                    class="button-checkbox"
+                  >
+                    {{ btn.menuName }}
+                  </el-checkbox>
+                </div>
+                <span v-else class="empty-text">-</span>
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
       </div>
       <template #footer>
@@ -124,10 +167,11 @@ defineOptions({
   name: 'RoleManage'
 })
 
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import axios from 'axios'
+import { hasBtnPermission } from '@/utils/auth'
 
 const loading = ref(false)
 const tableData = ref([])
@@ -141,15 +185,12 @@ const formRef = ref(null)
 
 // 菜单授权相关
 const menuAuthDialogVisible = ref(false)
-const menuTreeData = ref([])
-const menuTreeRef = ref(null)
+const menuAuthLoading = ref(false)
+const menuAuthTableRef = ref(null)
 const currentAuthRoleId = ref(null)
 const menuAuthSubmitting = ref(false)
-const menuTreeProps = {
-  children: 'children',
-  label: 'menuName'
-}
-const defaultCheckedKeys = ref([])
+const selectedMenuIds = ref([])
+const allMenuItems = ref([]) // 所有可选项（包括按钮）
 
 const searchForm = reactive({
   roleName: ''
@@ -188,11 +229,169 @@ const getList = async () => {
   }
 }
 
+// 表格合并处理
+const categorySpanArr = ref([])
+
+// 将菜单树转换为表格数据
+const menuAuthTableData = computed(() => {
+  const result = []
+  categorySpanArr.value = []
+  allMenuItems.value = []
+
+  const processCategory = (category) => {
+    const menus = category.children?.filter(m => m.menuType === 2) || []
+    const allButtons = category.children?.filter(b => b.menuType === 3) || []
+
+    if (menus.length === 0 && allButtons.length > 0) {
+      // 收集所有按钮到可选项
+      allButtons.forEach(btn => allMenuItems.value.push(btn))
+
+      result.push({
+        id: category.id,
+        categoryName: category.menuName,
+        categoryId: category.id,
+        menuName: '',
+        buttons: allButtons,
+        isCategory: true
+      })
+      categorySpanArr.value.push({ row: 1, col: 1 })
+    } else if (menus.length > 0) {
+      menus.forEach((menu, index) => {
+        const menuButtons = menu.children?.filter(b => b.menuType === 3) || []
+        const combinedButtons = [...menuButtons, ...allButtons]
+
+        // 收集所有按钮到可选项
+        combinedButtons.forEach(btn => allMenuItems.value.push(btn))
+
+        result.push({
+          id: menu.id,
+          categoryName: index === 0 ? category.menuName : '',
+          categoryId: category.id,
+          menuName: menu.menuName,
+          buttons: combinedButtons,
+          isCategory: false
+        })
+
+        if (index === 0) {
+          categorySpanArr.value.push({ row: menus.length, col: 1 })
+        } else {
+          categorySpanArr.value.push({ row: 0, col: 0 })
+        }
+      })
+    } else {
+      result.push({
+        id: category.id,
+        categoryName: category.menuName,
+        categoryId: category.id,
+        menuName: '-',
+        buttons: [],
+        isCategory: true
+      })
+      categorySpanArr.value.push({ row: 1, col: 1 })
+    }
+
+    const subCategories = category.children?.filter(c => c.menuType === 1) || []
+    subCategories.forEach(sub => processCategory(sub))
+  }
+
+  // 假设 menuAuthTreeData 存储菜单树数据
+  menuAuthTreeData.value.forEach(category => {
+    if (category.menuType === 1) {
+      processCategory(category)
+    }
+  })
+
+  return result
+})
+
+// 表格合并方法
+const menuAuthSpanMethod = ({ row, column, rowIndex, columnIndex }) => {
+  if (columnIndex === 0) {
+    const span = categorySpanArr.value[rowIndex] || { row: 1, col: 1 }
+    return {
+      rowspan: span.row,
+      colspan: span.col
+    }
+  }
+}
+
+// 获取分类下所有子节点ID（包括子分类、子菜单、按钮）
+const getAllChildIds = (category) => {
+  const ids = [category.id]
+  if (category.children) {
+    category.children.forEach(child => {
+      ids.push(...getAllChildIds(child))
+    })
+  }
+  return ids
+}
+
+// 切换分类选中状态
+const toggleCategorySelection = (categoryId) => {
+  const category = findCategoryById(menuAuthTreeData.value, categoryId)
+  if (!category) return
+  
+  const allChildIds = getAllChildIds(category)
+  const isCurrentlySelected = selectedMenuIds.value.includes(categoryId)
+  
+  if (isCurrentlySelected) {
+    selectedMenuIds.value = selectedMenuIds.value.filter(id => !allChildIds.includes(id))
+  } else {
+    allChildIds.forEach(id => {
+      if (!selectedMenuIds.value.includes(id)) {
+        selectedMenuIds.value.push(id)
+      }
+    })
+  }
+}
+
+// 根据ID查找分类节点
+const findCategoryById = (categories, id) => {
+  for (const category of categories) {
+    if (category.id === id) return category
+    if (category.children) {
+      const found = findCategoryById(category.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+// 切换菜单选中状态
+const toggleMenuSelection = (menuId, buttons) => {
+  const isCurrentlySelected = selectedMenuIds.value.includes(menuId)
+  const buttonIds = buttons ? buttons.map(b => b.id) : []
+  const allIds = [menuId, ...buttonIds]
+  
+  if (isCurrentlySelected) {
+    selectedMenuIds.value = selectedMenuIds.value.filter(id => !allIds.includes(id))
+  } else {
+    allIds.forEach(id => {
+      if (!selectedMenuIds.value.includes(id)) {
+        selectedMenuIds.value.push(id)
+      }
+    })
+  }
+}
+
+// 切换按钮选中状态
+const toggleButtonSelection = (buttonId) => {
+  const index = selectedMenuIds.value.indexOf(buttonId)
+  if (index > -1) {
+    selectedMenuIds.value.splice(index, 1)
+  } else {
+    selectedMenuIds.value.push(buttonId)
+  }
+}
+
+// 菜单授权树数据
+const menuAuthTreeData = ref([])
+
 const getAllMenus = async () => {
   try {
-    const res = await axios.get('/api/menu/all-tree')
+    const res = await axios.get('/api/menu/tree')
     if (res.data.code === 200) {
-      menuTreeData.value = res.data.data || []
+      menuAuthTreeData.value = res.data.data || []
     }
   } catch (err) {
     console.error('获取菜单树失败:', err)
@@ -203,12 +402,11 @@ const getRoleMenus = async (roleId) => {
   try {
     const res = await axios.get(`/api/role-menu/menu-ids/${roleId}`)
     if (res.data.code === 200) {
-      // 设置默认选中的菜单ID，树渲染时会自动选中
-      defaultCheckedKeys.value = res.data.data || []
+      selectedMenuIds.value = res.data.data || []
     }
   } catch (err) {
     console.error('获取角色菜单失败:', err)
-    defaultCheckedKeys.value = []
+    selectedMenuIds.value = []
   }
 }
 
@@ -283,30 +481,36 @@ const handleDelete = async (row) => {
 // 菜单授权功能
 const handleMenuAuth = async (row) => {
   currentAuthRoleId.value = row.id
-  
-  // 先获取角色已分配的菜单ID
-  await getRoleMenus(row.id)
-  
-  // 再获取所有菜单树
-  await getAllMenus()
-  
-  // 打开弹窗（此时树会根据 defaultCheckedKeys 自动选中）
+  menuAuthLoading.value = true
+
+  try {
+    // 获取所有菜单树
+    await getAllMenus()
+    // 获取角色已分配的菜单ID
+    await getRoleMenus(row.id)
+  } finally {
+    menuAuthLoading.value = false
+  }
+
   menuAuthDialogVisible.value = true
 }
+
+// 打开弹窗后设置选中状态（现在使用 checkbox 自动绑定，无需手动设置）
+const setTableSelection = () => {
+}
+
+// 监听弹窗打开，设置选中状态（现在使用 checkbox 自动绑定，无需手动设置）
+watch(menuAuthDialogVisible, (val) => {
+  if (val) {
+  }
+})
 
 const handleMenuAuthSubmit = async () => {
   menuAuthSubmitting.value = true
   try {
-    // 获取所有选中的菜单ID
-    const checkedKeys = menuTreeRef.value.getCheckedKeys()
-    // 同时获取半选中的父节点ID
-    const halfCheckedKeys = menuTreeRef.value.getHalfCheckedKeys()
-    // 合并所有选中的ID
-    const allMenuIds = [...checkedKeys, ...halfCheckedKeys]
-    
     await axios.post('/api/role-menu/assign', {
       roleId: currentAuthRoleId.value,
-      menuIds: allMenuIds
+      menuIds: selectedMenuIds.value
     })
     ElMessage.success('菜单授权成功')
     menuAuthDialogVisible.value = false
@@ -360,15 +564,55 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.menu-tree-box {
-  max-height: 400px;
+.menu-table-box {
+  max-height: 450px;
   overflow-y: auto;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
-  padding: 15px;
 }
 
-:deep(.el-tree-node__content) {
-  padding: 5px 0;
+.buttons-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.button-tag {
+  margin: 2px 0;
+  cursor: pointer;
+}
+
+.button-tag.is-hit {
+  background-color: #fdf6ec;
+  border-color: #f5dab1;
+  color: #e6a23c;
+}
+
+.button-checkbox {
+  margin: 2px 6px 2px 0;
+}
+
+.empty-text {
+  color: #c0c4cc;
+}
+
+:deep(.el-table) {
+  font-size: 14px;
+}
+
+:deep(.el-table th) {
+  background-color: #fafafa;
+  color: #606266;
+  font-weight: 500;
+}
+
+:deep(.el-table td) {
+  padding: 10px 12px;
+}
+
+:deep(.el-table--border th) {
+  border-bottom: 1px solid #ebeef5;
+}
+
+:deep(.el-table--border td) {
+  border-bottom: 1px solid #ebeef5;
 }
 </style>
