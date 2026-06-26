@@ -389,7 +389,7 @@ const menuAuthTreeData = ref([])
 
 const getAllMenus = async () => {
   try {
-    const res = await axios.get('/api/menu/tree')
+    const res = await axios.get('/api/menu/all-tree')
     if (res.data.code === 200) {
       menuAuthTreeData.value = res.data.data || []
     }

@@ -36,6 +36,7 @@
     <div class="action-toolbar">
       <button class="search-btn" @click="openImport" v-if="hasBtnPermission('导入Excel')">导入Excel</button>
       <button class="search-btn" @click="doClean" v-if="hasBtnPermission('数据清洗')">数据清洗</button>
+      <button class="search-btn" @click="doValidate" v-if="hasBtnPermission('数据校验')">数据校验</button>
       <button class="search-btn" @click="doCalculate" v-if="hasBtnPermission('执行计算')">执行计算</button>
       <button class="search-btn" @click="doGenerateSummary" v-if="hasBtnPermission('生成汇总账单')">
         生成汇总账单
@@ -162,6 +163,50 @@
         </div>
       </div>
     </div>
+
+    <!-- 数据校验结果 弹窗 -->
+    <div class="modal" v-if="validateVisible" @click.self="closeValidate">
+      <div class="modal-content validate-modal">
+        <div class="modal-header">
+          <h3>数据校验结果</h3>
+          <span class="close" @click="closeValidate">×</span>
+        </div>
+        <div class="validate-body">
+          <div class="validate-summary" :class="validateResult.valid ? 'success' : 'error'">
+            <el-icon :size="20" style="margin-right: 8px">
+              <CircleCheck v-if="validateResult.valid" />
+              <Warning v-else />
+            </el-icon>
+            <span>{{ validateResult.valid ? '校验通过，数据完整无误！' : `校验不通过，共 ${validateResult.errors.length} 条错误` }}</span>
+          </div>
+          <div v-if="!validateResult.valid && validateResult.errors.length > 0" class="error-list">
+            <div class="error-table-container">
+              <table class="error-table">
+                <thead>
+                  <tr>
+                    <th>序号</th>
+                    <th>客户名称</th>
+                    <th>客户编码</th>
+                    <th>错误类型</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(error, index) in validateResult.errors" :key="index">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ error.customerName }}</td>
+                    <td>{{ error.customerCode }}</td>
+                    <td class="error-type">{{ error.errorType }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="search-btn" @click="closeValidate">关闭</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -173,6 +218,7 @@ defineOptions({
 import { ref, reactive, onMounted, onUnmounted, inject, watch } from "vue";
 import axios from "axios";
 import { ElMessage, ElLoading } from "element-plus";
+import { CircleCheck, Warning } from "@element-plus/icons-vue";
 import Pagination from "@/components/Pagination.vue";
 import { hasBtnPermission } from "@/utils/auth";
 
@@ -204,6 +250,11 @@ const total = ref(0);
 const importVisible = ref(false);
 const fileRef = ref(null);
 const importing = ref(false);
+const validateVisible = ref(false);
+const validateResult = reactive({
+  valid: true,
+  errors: []
+});
 
 let pollTimer = null;
 const POLL_INTERVAL = 3000; // 调整为3秒轮询一次，体验更好
@@ -406,6 +457,42 @@ async function doClean() {
   } finally {
     loading.close();
   }
+}
+
+async function doValidate() {
+  if (!query.billMonth) {
+    ElMessage.warning("请先选择账单月份");
+    return;
+  }
+  const loading = ElLoading.service({
+    lock: true,
+    text: "正在校验数据...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
+  try {
+    const params = {};
+    if (query.billMonth) {
+      params.date = query.billMonth;
+    }
+    const res = await axios.post("/api/waybill/validate", null, { params });
+    if (res.data.code === 200) {
+      const data = res.data.data;
+      validateResult.valid = data.valid;
+      validateResult.errors = data.errors || [];
+      validateVisible.value = true;
+    } else {
+      ElMessage.error(res.data.message || "数据校验失败");
+    }
+  } catch (err) {
+    console.error("数据校验失败", err);
+    ElMessage.error("数据校验失败，请稍后重试");
+  } finally {
+    loading.close();
+  }
+}
+
+function closeValidate() {
+  validateVisible.value = false;
 }
 
 async function doCalculate() {
@@ -718,6 +805,87 @@ td {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  background: #fafafa;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #ebeef5;
+}
+
+.validate-modal {
+  max-width: 700px;
+}
+
+.validate-body {
+  padding: 20px;
+}
+
+.validate-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.validate-summary.success {
+  background: #f0f9eb;
+  color: #67c23a;
+}
+
+.validate-summary.error {
+  background: #fef0f0;
+  color: #f56c6c;
+}
+
+.error-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+}
+
+.error-table-container {
+  overflow-x: auto;
+}
+
+.error-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.error-table th {
+  background: #f5f7fa;
+  padding: 10px 12px;
+  border-bottom: 1px solid #ebeef5;
+  font-weight: 600;
+  text-align: center;
+  font-size: 13px;
+  color: #606266;
+  position: sticky;
+  top: 0;
+}
+
+.error-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #ebeef5;
+  text-align: center;
+  font-size: 13px;
+}
+
+.error-table tr:hover {
+  background: #f5f7fa;
+}
+
+.error-type {
+  color: #f56c6c;
+  font-weight: 500;
 }
 
 .close {
