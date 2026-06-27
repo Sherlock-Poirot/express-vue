@@ -141,7 +141,10 @@ const menuIconMap = {
   'el-icon-check': Document,
   'el-icon-download': Document,
   'el-icon-s-data': DataLine,
-  'el-icon-trending-up': TrendCharts
+  'el-icon-trending-up': TrendCharts,
+  'el-icon-wallet': Document,
+  'el-icon-receipt': Document,
+  'el-icon-notebook-2': Document
 }
 
 const currentPath = computed(() => route.path)
@@ -244,11 +247,14 @@ const getComponentName = (path) => {
     '/settlement/employee': 'Staff',
     '/system/user': 'UserManage',
     '/system/role': 'RoleManage',
+    '/system/menu': 'Menu',
+    '/system/dict': 'DictManage',
     '/area': 'Area',
     '/profile': 'Profile',
     '/report/profit': 'ProfitReport',
     '/report/policy': 'Policy',
     '/report/cost': 'CostManagement',
+    '/finance/expense': 'ExpenseManage',
     '/dashboard': 'Dashboard'
   }
   return pathMap[path] || ''

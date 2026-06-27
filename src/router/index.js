@@ -10,6 +10,7 @@ import Layout from "../views/Layout.vue";
 import UserManage from "../views/UserManage.vue";
 import RoleManage from "../views/RoleManage.vue";
 import Menu from "../views/Menu.vue";
+import DictManage from "../views/DictManage.vue";
 import Profile from "../views/Profile.vue";
 import ComingSoon from "../views/ComingSoon.vue";
 import Error403 from "../views/Error403.vue";
@@ -54,6 +55,12 @@ const routes = [
         name: "MenuManage",
         component: Menu,
         meta: { title: "菜单管理" },
+      },
+      {
+        path: "system/dict",
+        name: "DictManage",
+        component: DictManage,
+        meta: { title: "字典管理" },
       },
       
       {
@@ -105,6 +112,13 @@ const routes = [
         name: "Area",
         component: Area,
         meta: { title: "区域字典" },
+      },
+      
+      {
+        path: "finance/expense",
+        name: "ExpenseManage",
+        component: () => import("../views/ExpenseManage.vue"),
+        meta: { title: "报销管理" },
       },
       
       {
