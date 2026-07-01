@@ -11,6 +11,7 @@ import UserManage from "../views/UserManage.vue";
 import RoleManage from "../views/RoleManage.vue";
 import Menu from "../views/Menu.vue";
 import DictManage from "../views/DictManage.vue";
+import KpiSignRecord from "../views/KpiSignRecord.vue";
 import Profile from "../views/Profile.vue";
 import ComingSoon from "../views/ComingSoon.vue";
 import Error403 from "../views/Error403.vue";
@@ -119,6 +120,13 @@ const routes = [
         name: "ExpenseManage",
         component: () => import("../views/ExpenseManage.vue"),
         meta: { title: "报销管理" },
+      },
+      
+      {
+        path: "quality/fake-sign",
+        name: "KpiSignRecord",
+        component: KpiSignRecord,
+        meta: { title: "虚假签收" },
       },
       
       {
