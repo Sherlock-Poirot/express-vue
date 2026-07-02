@@ -28,8 +28,12 @@
         <span class="summary-value" :class="getDayOnDayClass(summary.dayOnDayRatio)">{{ summary.dayOnDayRatio }}</span>
       </div>
       <div class="summary-item">
-        <span class="summary-label">总成本</span>
+        <span class="summary-label">系统发件成本</span>
         <span class="summary-value total-cost">{{ summary.totalAmount }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label">物料成本</span>
+        <span class="summary-value">{{ summary.materialFee }}</span>
       </div>
       <div class="summary-item">
         <span class="summary-label">客户总中转费</span>
@@ -160,6 +164,7 @@ const summary = reactive({
   avgWeight: '0.00',
   dayOnDayRatio: '0.00%',
   totalAmount: '0.00',
+  materialFee: '0.00',
   totalFee: '0.00',
   totalRebate: '0.00',
   estimatedRebateAmount: '0.00',
@@ -247,6 +252,7 @@ async function doSearch() {
       summary.avgWeight = data.avgWeight ? data.avgWeight.toString() : '0.00';
       summary.dayOnDayRatio = data.avgDayOnDayRatio ? (Number(data.avgDayOnDayRatio) * 100).toFixed(2) + '%' : '-';
       summary.totalAmount = data.totalAmount ? data.totalAmount.toString() : '0.00';
+      summary.materialFee = data.materialFee ? data.materialFee.toString() : '0.00';
       summary.totalFee = data.totalCustomerFee ? data.totalCustomerFee.toString() : '0.00';
       summary.totalRebate = data.totalRebateAmount ? data.totalRebateAmount.toString() : '0.00';
       summary.estimatedRebateAmount = data.estimatedRebateAmount ? data.estimatedRebateAmount.toString() : '0.00';
