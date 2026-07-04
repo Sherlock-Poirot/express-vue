@@ -1,8 +1,9 @@
 <template>
   <el-container class="layout-container">
-    <el-aside width="220px" class="sidebar">
+    <el-aside :width="sidebarCollapsed ? '64px' : '220px'" class="sidebar" :class="{ 'collapsed': sidebarCollapsed }">
       <div class="logo">
-        <h2>天晨快递财务系统</h2>
+        <h2 v-if="!sidebarCollapsed">天晨快递财务系统</h2>
+        <span v-else class="logo-icon">T</span>
       </div>
       <div class="sidebar-menu">
         <div
@@ -16,11 +17,11 @@
               @click="toggleMenu(menu.id)"
             >
               <el-icon :size="16"><component :is="getIcon(menu.icon)" /></el-icon>
-              <span>{{ menu.menuName }}</span>
-              <el-icon class="arrow-icon"><ArrowDown :class="{ 'rotated': openedMenus.includes(menu.id) }" /></el-icon>
+              <span v-if="!sidebarCollapsed">{{ menu.menuName }}</span>
+              <el-icon class="arrow-icon" v-if="!sidebarCollapsed"><ArrowDown :class="{ 'rotated': openedMenus.includes(menu.id) }" /></el-icon>
             </div>
             <div
-              v-show="openedMenus.includes(menu.id)"
+              v-show="openedMenus.includes(menu.id) && !sidebarCollapsed"
               class="menu-children"
             >
               <div
@@ -41,9 +42,12 @@
             @click="openTab(menu)"
           >
             <el-icon :size="16"><component :is="getIcon(menu.icon)" /></el-icon>
-            <span>{{ menu.menuName }}</span>
+            <span v-if="!sidebarCollapsed">{{ menu.menuName }}</span>
           </div>
         </div>
+      </div>
+      <div class="sidebar-toggle" @click="sidebarCollapsed = !sidebarCollapsed">
+        <el-icon><ArrowLeft v-if="!sidebarCollapsed" /><ArrowRight v-else /></el-icon>
       </div>
     </el-aside>
     
@@ -117,7 +121,7 @@ import { ref, computed, onMounted, watch, provide } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { User, ArrowDown, SwitchButton, Document, Menu, Setting, DataLine, UserFilled, TrendCharts, Folder, Close } from '@element-plus/icons-vue'
+import { User, ArrowDown, SwitchButton, Document, Menu, Setting, DataLine, UserFilled, TrendCharts, Folder, Close, ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 import { getToken, getUser, clearAuth, setUser, setPermissions, getPermissions } from '../utils/auth'
 
 const route = useRoute()
@@ -129,6 +133,7 @@ const openedMenus = ref([])
 const tabs = ref([])
 const tabStates = ref({})
 const cachedComponents = ref([])
+const sidebarCollapsed = ref(false)
 
 const menuIconMap = {
   'el-icon-setting': Setting,
@@ -374,6 +379,7 @@ watch(() => route.path, (newPath) => {
   background: linear-gradient(180deg, #304156 0%, #1a2a3a 100%);
   overflow-x: hidden;
   overflow-y: auto;
+  transition: width 0.3s;
 }
 
 .logo {
@@ -389,6 +395,12 @@ watch(() => route.path, (newPath) => {
   color: white;
   font-size: 16px;
   font-weight: 600;
+}
+
+.logo-icon {
+  font-size: 24px;
+  font-weight: 600;
+  color: white;
 }
 
 .sidebar-menu {
@@ -409,6 +421,11 @@ watch(() => route.path, (newPath) => {
   transition: background 0.2s;
 }
 
+.sidebar.collapsed .menu-parent {
+  padding-left: 0;
+  justify-content: center;
+}
+
 .menu-parent:hover {
   background: rgba(255, 255, 255, 0.1);
 }
@@ -421,6 +438,10 @@ watch(() => route.path, (newPath) => {
   margin-right: 8px;
   font-size: 16px;
   color: white;
+}
+
+.sidebar.collapsed .menu-parent > .el-icon {
+  margin-right: 0;
 }
 
 .menu-parent > span {
@@ -459,6 +480,31 @@ watch(() => route.path, (newPath) => {
 
 .menu-child.active {
   background: #409eff;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-toggle .el-icon {
+  color: white;
+  font-size: 18px;
 }
 
 .header {

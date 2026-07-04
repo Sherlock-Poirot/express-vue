@@ -343,9 +343,13 @@ onMounted(() => {
 
 <style scoped>
 .profit-report-page {
-  padding: 20px;
+  padding: 16px;
   background: #f5f7fa;
   min-height: 100vh;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .search-toolbar {
@@ -365,12 +369,14 @@ onMounted(() => {
 .search-item label {
   font-weight: 500;
   color: #333;
+  font-size: 14px;
 }
 
 .search-item input {
   padding: 6px 10px;
   border: 1px solid #ddd;
   border-radius: 6px;
+  font-size: 14px;
 }
 
 button {
@@ -378,6 +384,7 @@ button {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 14px;
 }
 
 .search-btn {
@@ -390,21 +397,31 @@ button {
   top: 0;
   z-index: 100;
   display: flex;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 16px;
-  padding: 16px 20px;
+  padding: 12px 16px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   flex-wrap: wrap;
+
+  @media (min-width: 1400px) {
+    gap: 16px;
+    padding: 16px 20px;
+  }
 }
 
 .summary-item {
   display: flex;
   flex-direction: column;
-  min-width: 100px;
-  padding: 8px 16px;
+  min-width: 90px;
+  padding: 6px 12px;
   border-right: 1px solid #f0f0f0;
+
+  @media (min-width: 1400px) {
+    min-width: 100px;
+    padding: 8px 16px;
+  }
 }
 
 .summary-item:last-child {
@@ -425,9 +442,13 @@ button {
 }
 
 .summary-value {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #333;
+
+  @media (min-width: 1400px) {
+    font-size: 18px;
+  }
 }
 
 .summary-value.profit {
@@ -459,22 +480,32 @@ table {
 
 th {
   background: #fafafa;
-  padding: 12px 10px;
+  padding: 8px 8px;
   border: 1px solid #ebeef5;
   font-weight: 600;
   text-align: center;
-  font-size: 14px;
+  font-size: 12px;
   color: #333;
   white-space: nowrap;
+
+  @media (min-width: 1400px) {
+    padding: 12px 10px;
+    font-size: 14px;
+  }
 }
 
 td {
-  padding: 10px 10px;
+  padding: 8px 8px;
   border: 1px solid #ebeef5;
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   color: #666;
   white-space: nowrap;
+
+  @media (min-width: 1400px) {
+    padding: 10px 10px;
+    font-size: 13px;
+  }
 }
 
 tbody tr.even-row {

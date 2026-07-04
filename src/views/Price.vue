@@ -946,7 +946,6 @@ async function openAddPriceModal(item) {
       addTableRows.value.forEach((row) => {
         const target = detailList.find((item) => item.area === row.area);
         if (target) {
-          row.firstFee = target.firstFee;
           row.overFee = target.overFee;
         }
       });
@@ -1325,11 +1324,16 @@ async function submitAddCustomer() {
 <style scoped>
 /* 搜索框样式 */
 .search-box {
-  margin: 10px 0 20px;
+  margin: 8px 0 16px;
   display: flex;
-  gap: 15px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
+
+  @media (min-width: 1400px) {
+    margin: 10px 0 20px;
+    gap: 15px;
+  }
 }
 .search-item {
   display: flex;
@@ -1338,15 +1342,25 @@ async function submitAddCustomer() {
 }
 .search-item label {
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   color: #333;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 .search-item input {
   border: 1px solid #dcdfe6;
   border-radius: 4px;
-  padding: 6px 10px;
+  padding: 5px 10px;
   outline: none;
   transition: all 0.2s;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
 }
 .search-item input:focus {
   border-color: #1890ff;
@@ -1374,10 +1388,14 @@ input[type="number"]::-webkit-outer-spin-button {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 14px;
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 .search-btn:hover,
 .add-price-btn:hover,
@@ -1393,61 +1411,102 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .search-btn {
-  padding: 7px 18px;
+  padding: 6px 16px;
   background: #1890ff;
   color: #fff;
+
+  @media (min-width: 1400px) {
+    padding: 7px 18px;
+  }
 }
 .delete-btn {
-  padding: 7px 18px;
+  padding: 6px 16px;
   background: #f56c6c;
   color: #fff;
+
+  @media (min-width: 1400px) {
+    padding: 7px 18px;
+  }
 }
 .edit-btn {
-  padding: 5px 10px;
+  padding: 4px 8px;
   background: #1890ff;
   color: #fff;
   margin-right: 6px;
+
+  @media (min-width: 1400px) {
+    padding: 5px 10px;
+  }
 }
 .add-price-btn {
-  padding: 5px 10px;
+  padding: 4px 8px;
   background: #00b42a;
   color: #fff;
   margin-right: 6px;
+
+  @media (min-width: 1400px) {
+    padding: 5px 10px;
+  }
 }
 .del-price-btn {
-  padding: 5px 10px;
+  padding: 4px 8px;
   background: #ff7d00;
   color: #fff;
+
+  @media (min-width: 1400px) {
+    padding: 5px 10px;
+  }
 }
 .add-col-btn {
-  padding: 8px 14px;
+  padding: 6px 12px;
   background: #1890ff;
   color: #fff;
-  margin: 10px 0;
+  margin: 8px 0;
+
+  @media (min-width: 1400px) {
+    padding: 8px 14px;
+    margin: 10px 0;
+  }
 }
 
 /* 表格 */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  margin-top: 8px;
   background: #fff;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+
+  @media (min-width: 1400px) {
+    margin-top: 10px;
+  }
 }
 th {
   background: #f5f7fa;
   font-weight: 600;
   color: #333;
-  padding: 12px 8px;
+  padding: 8px 6px;
   border: 1px solid #ebeef5;
   text-align: center;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 12px 8px;
+    font-size: 14px;
+  }
 }
 td {
-  padding: 12px 8px;
+  padding: 8px 6px;
   border: 1px solid #ebeef5;
   text-align: center;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 12px 8px;
+    font-size: 14px;
+  }
 }
 .price-row {
   cursor: pointer;
@@ -1459,11 +1518,15 @@ td {
 
 /* 备注列：固定宽度 + 超出省略 */
 .remark-ellipsis {
-  max-width: 120px;
+  max-width: 100px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   position: relative;
+
+  @media (min-width: 1400px) {
+    max-width: 120px;
+  }
 }
 
 .remark-text {
@@ -1478,9 +1541,9 @@ td {
 .custom-tooltip {
   position: fixed;
   z-index: 10000;
-  max-width: 400px;
-  min-width: 150px;
-  padding: 12px 16px;
+  max-width: 350px;
+  min-width: 130px;
+  padding: 10px 14px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
   border-radius: 12px;
@@ -1488,13 +1551,23 @@ td {
               0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   backdrop-filter: blur(10px);
   animation: tooltipFadeIn 0.2s ease-out;
+
+  @media (min-width: 1400px) {
+    max-width: 400px;
+    min-width: 150px;
+    padding: 12px 16px;
+  }
 }
 
 .tooltip-content {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.6;
   word-wrap: break-word;
   white-space: pre-wrap;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 
 .tooltip-arrow {
@@ -1538,40 +1611,59 @@ td {
 /* 弹窗内容 - 高级美化 */
 .modal-content {
   background: #fff;
-  padding: 28px;
+  padding: 20px;
   width: 98%;
-  max-width: 1400px;
+  max-width: 1200px;
   max-height: 92vh;
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   overflow: auto;
   position: relative;
   border: none;
+
+  @media (min-width: 1400px) {
+    padding: 28px;
+    max-width: 1400px;
+  }
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 24px;
+  }
 }
 .modal-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #222;
+
+  @media (min-width: 1400px) {
+    font-size: 18px;
+  }
 }
 .close-btn {
-  font-size: 24px;
+  font-size: 22px;
   color: #666;
   cursor: pointer;
   transition: all 0.2s;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+
+  @media (min-width: 1400px) {
+    font-size: 24px;
+    width: 30px;
+    height: 30px;
+  }
 }
 .close-btn:hover {
   color: #fff;
@@ -1580,10 +1672,18 @@ td {
 
 /* 动态表格 */
 .blank-row {
-  height: 20px;
+  height: 16px;
+
+  @media (min-width: 1400px) {
+    height: 20px;
+  }
 }
 .table-group {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 10px;
+  }
 }
 .table-group table {
   width: 100%;
@@ -1592,8 +1692,14 @@ td {
 .table-group table th,
 .table-group table td {
   text-align: center;
-  padding: 10px 8px;
+  padding: 8px 6px;
   border: 1px solid #ebeef5;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 8px;
+    font-size: 14px;
+  }
 }
 .table-group table th {
   background: #f5f7fa;
@@ -1609,58 +1715,89 @@ td {
 }
 .remark-row td {
   text-align: left !important;
-  padding: 14px 16px;
-  font-size: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
   color: #333;
   border-top: 1px solid #ebeef5;
+
+  @media (min-width: 1400px) {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
 }
 .remark-row strong {
   color: #1890ff;
   margin-right: 8px;
 }
 .remark-logo {
-  width: 100px;
+  width: 80px;
   height: auto;
   opacity: 0.25;
   vertical-align: middle;
-  margin-right: 10px;
+  margin-right: 8px;
+
+  @media (min-width: 1400px) {
+    width: 100px;
+    margin-right: 10px;
+  }
 }
 
 /* 删除按钮 */
 .del-single-btn {
-  padding: 5px 10px;
+  padding: 4px 8px;
   background: #ff4d4f;
   color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 5px 10px;
+    font-size: 13px;
+  }
 }
 
 /* 新增价格表单 */
 .add-form {
   display: flex;
-  gap: 24px;
-  margin-bottom: 20px;
+  gap: 16px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
+
+  @media (min-width: 1400px) {
+    gap: 24px;
+    margin-bottom: 20px;
+  }
 }
 .form-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 .form-item label {
   font-weight: 500;
   color: #333;
-  font-size: 14px;
-  min-width: 76px;
+  font-size: 13px;
+  min-width: 68px;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+    min-width: 76px;
+  }
 }
 .form-item input {
   border: 1px solid #e0e3e9;
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   outline: none;
   transition: all 0.2s;
-  font-size: 14px;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
 }
 .form-item input:focus {
   border-color: #1890ff;
@@ -1675,9 +1812,15 @@ td {
 table input {
   border: 1px solid #e0e3e9 !important;
   border-radius: 6px !important;
-  padding: 6px 8px !important;
+  padding: 5px 6px !important;
   outline: none;
   transition: border 0.2s;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 6px 8px !important;
+    font-size: 13px;
+  }
 }
 table input:focus {
   border-color: #1890ff !important;
@@ -1738,13 +1881,26 @@ input[type="number"]::-webkit-outer-spin-button {
 /* 编辑客户多列布局 —— 横向并排样式 */
 .edit-grid-form {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px 20px;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 12px 16px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1400px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 20px;
+  }
 }
 .edit-grid-form .form-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+
+  @media (min-width: 1400px) {
+    gap: 10px;
+  }
 }
 .edit-grid-form label {
   width: 110px;

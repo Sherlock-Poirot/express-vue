@@ -567,77 +567,130 @@ onMounted(() => {
 <style scoped>
 .section-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
 }
 
 .card {
   background: #fff;
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .card-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   color: #333;
+
+  @media (min-width: 1400px) {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
 }
 
 .kpi-tabs {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 16px;
+  }
 }
 
 .bar-chart-scroll {
-  max-height: 180px;
+  max-height: 160px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+
+  @media (min-width: 1400px) {
+    max-height: 180px;
+    gap: 12px;
+  }
 }
 
 .bar-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+  }
 }
 
 .bar-label {
-  font-size: 13px;
+  font-size: 12px;
   color: #666;
-  width: 70px;
+  width: 60px;
   text-align: right;
   flex-shrink: 0;
+
+  @media (min-width: 1400px) {
+    font-size: 13px;
+    width: 70px;
+  }
 }
 
 .bar-track {
   flex: 1;
-  height: 20px;
+  height: 16px;
   background: #f0f0f0;
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
+
+  @media (min-width: 1400px) {
+    height: 20px;
+    border-radius: 10px;
+  }
 }
 
 .bar-fill {
   height: 100%;
-  border-radius: 10px;
+  border-radius: 8px;
   transition: width 0.3s ease;
+
+  @media (min-width: 1400px) {
+    border-radius: 10px;
+  }
 }
 
 .bar-count {
-  font-size: 13px;
+  font-size: 12px;
   color: #333;
-  width: 60px;
+  width: 50px;
   text-align: left;
   flex-shrink: 0;
+
+  @media (min-width: 1400px) {
+    font-size: 13px;
+    width: 60px;
+  }
 }
 
 .pie-section {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  @media (min-width: 1400px) {
+    gap: 24px;
+  }
 }
 
 .pie-chart {
@@ -647,22 +700,36 @@ onMounted(() => {
 .pie-legend {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+  }
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 6px;
+  font-size: 12px;
   color: #666;
+
+  @media (min-width: 1400px) {
+    gap: 8px;
+    font-size: 13px;
+  }
 }
 
 .legend-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   flex-shrink: 0;
+
+  @media (min-width: 1400px) {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .legend-count {
@@ -676,11 +743,19 @@ onMounted(() => {
 }
 
 .search-box {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 16px;
+  }
 }
 
 .table-box {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 16px;
+  }
 }
 
 .pagination-box {
@@ -699,19 +774,52 @@ onMounted(() => {
 
 .import-box {
   text-align: center;
-  padding: 40px;
+  padding: 30px;
   border: 2px dashed #d9d9d9;
   border-radius: 12px;
   background: #fafafa;
+
+  @media (min-width: 1400px) {
+    padding: 40px;
+  }
 }
 
 .import-tip {
-  margin-top: 12px;
-  font-size: 13px;
+  margin-top: 10px;
+  font-size: 12px;
   color: #999;
+
+  @media (min-width: 1400px) {
+    margin-top: 12px;
+    font-size: 13px;
+  }
 }
 
 .upload-demo {
   display: inline-block;
+}
+
+:deep(.el-table) {
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
+}
+
+:deep(.el-table th) {
+  padding: 8px 8px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 12px;
+  }
+}
+
+:deep(.el-table td) {
+  padding: 8px 8px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 12px;
+  }
 }
 </style>

@@ -438,19 +438,30 @@ onUnmounted(() => {
 .dashboard-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #0a1628 0%, #1a1f3a 50%, #0d1b2a 100%);
-  padding: 20px;
+  padding: 16px;
   color: #fff;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 30px;
+  padding: 16px 24px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+  gap: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 20px 30px;
+    margin-bottom: 20px;
+  }
 }
 
 .header-left {
@@ -459,58 +470,90 @@ onUnmounted(() => {
 }
 
 .title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   background: linear-gradient(90deg, #1890ff, #52c41a);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0;
+
+  @media (min-width: 1400px) {
+    font-size: 28px;
+  }
 }
 
 .subtitle {
-  font-size: 14px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.6);
-  margin-top: 5px;
+  margin-top: 4px;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+    margin-top: 5px;
+  }
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
+
+  @media (min-width: 1400px) {
+    gap: 20px;
+  }
 }
 
 .date-display {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+
+  @media (min-width: 1400px) {
+    gap: 8px;
+  }
 }
 
 .date-label {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 14px;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 
 .date-input {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid rgba(24, 144, 255, 0.5);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
-  font-size: 14px;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
 }
 
 .refresh-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: 6px;
+  padding: 8px 16px;
   background: rgba(24, 144, 255, 0.2);
   border: 1px solid rgba(24, 144, 255, 0.5);
   border-radius: 8px;
   color: #1890ff;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   transition: all 0.3s;
+
+  @media (min-width: 1400px) {
+    padding: 10px 20px;
+    font-size: 14px;
+    gap: 8px;
+  }
 }
 
 .refresh-btn:hover {
@@ -519,22 +562,36 @@ onUnmounted(() => {
 }
 
 .refresh-icon {
-  font-size: 16px;
+  font-size: 14px;
+
+  @media (min-width: 1400px) {
+    font-size: 16px;
+  }
 }
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
 }
 
 .card {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .card:hover {
@@ -543,32 +600,55 @@ onUnmounted(() => {
 }
 
 .card-icon {
-  font-size: 32px;
-  margin-bottom: 10px;
+  font-size: 28px;
+  margin-bottom: 8px;
+
+  @media (min-width: 1400px) {
+    font-size: 32px;
+    margin-bottom: 10px;
+  }
 }
 
 .card-content {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
+
+  @media (min-width: 1400px) {
+    gap: 5px;
+  }
 }
 
 .card-label {
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.6);
+
+  @media (min-width: 1400px) {
+    font-size: 12px;
+  }
 }
 
 .card-value {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
+
+  @media (min-width: 1400px) {
+    font-size: 24px;
+  }
 }
 
 .card-trend {
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-top: 10px;
-  font-size: 12px;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 11px;
+
+  @media (min-width: 1400px) {
+    margin-top: 10px;
+    font-size: 12px;
+    gap: 5px;
+  }
 }
 
 .trend-up {
@@ -609,8 +689,13 @@ onUnmounted(() => {
 
 .main-content {
   display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 16px;
+
+  @media (min-width: 1400px) {
+    grid-template-columns: 1fr 1.5fr 1fr;
+    gap: 20px;
+  }
 }
 
 .left-panel,
@@ -618,37 +703,60 @@ onUnmounted(() => {
 .right-panel {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .panel-title {
-  padding-bottom: 15px;
+  padding-bottom: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+  }
 }
 
 .title-text {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #fff;
+
+  @media (min-width: 1400px) {
+    font-size: 16px;
+  }
 }
 
 .ranking-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  max-height: 500px;
+  gap: 10px;
+  max-height: 400px;
   overflow-y: auto;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+    max-height: 500px;
+  }
 }
 
 .ranking-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px;
+  gap: 10px;
+  padding: 8px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+    padding: 10px;
+  }
 }
 
 .ranking-item.top-three {
@@ -656,15 +764,21 @@ onUnmounted(() => {
 }
 
 .rank {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   background: rgba(255, 255, 255, 0.2);
+
+  @media (min-width: 1400px) {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
 }
 
 .rank-1 {
@@ -685,29 +799,45 @@ onUnmounted(() => {
 .customer-info {
   display: flex;
   flex-direction: column;
-  width: 80px;
+  width: 70px;
   flex-shrink: 0;
+
+  @media (min-width: 1400px) {
+    width: 80px;
+  }
 }
 
 .customer-name {
-  font-size: 13px;
+  font-size: 12px;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  @media (min-width: 1400px) {
+    font-size: 13px;
+  }
 }
 
 .customer-code {
-  font-size: 11px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.5);
+
+  @media (min-width: 1400px) {
+    font-size: 11px;
+  }
 }
 
 .profit-bar {
   flex: 1;
-  height: 8px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   overflow: hidden;
+
+  @media (min-width: 1400px) {
+    height: 8px;
+  }
 }
 
 .profit-fill {
@@ -718,50 +848,81 @@ onUnmounted(() => {
 }
 
 .profit-value {
-  width: 80px;
+  width: 70px;
   text-align: right;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #52c41a;
+
+  @media (min-width: 1400px) {
+    width: 80px;
+    font-size: 13px;
+  }
 }
 
 .empty-ranking {
   text-align: center;
   color: rgba(255, 255, 255, 0.3);
-  padding: 40px;
+  padding: 30px;
+
+  @media (min-width: 1400px) {
+    padding: 40px;
+  }
 }
 
 .map-container {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
+
+  @media (min-width: 1400px) {
+    gap: 15px;
+  }
 }
 
 .map-chart {
   width: 100%;
-  height: 350px;
+  height: 280px;
+
+  @media (min-width: 1400px) {
+    height: 350px;
+  }
 }
 
 .region-legend {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 8px;
+
+  @media (min-width: 1400px) {
+    gap: 10px;
+  }
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
+  gap: 6px;
+  padding: 6px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 6px;
+
+  @media (min-width: 1400px) {
+    gap: 8px;
+    padding: 8px;
+  }
 }
 
 .legend-color {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+
+  @media (min-width: 1400px) {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .legend-info {
@@ -770,53 +931,87 @@ onUnmounted(() => {
 }
 
 .legend-name {
-  font-size: 12px;
+  font-size: 11px;
   color: #fff;
+
+  @media (min-width: 1400px) {
+    font-size: 12px;
+  }
 }
 
 .legend-value {
-  font-size: 11px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.6);
+
+  @media (min-width: 1400px) {
+    font-size: 11px;
+  }
 }
 
 .region-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  max-height: 500px;
+  gap: 12px;
+  max-height: 400px;
   overflow-y: auto;
+
+  @media (min-width: 1400px) {
+    gap: 15px;
+    max-height: 500px;
+  }
 }
 
 .region-item {
-  padding: 12px;
+  padding: 10px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 8px;
+
+  @media (min-width: 1400px) {
+    padding: 12px;
+  }
 }
 
 .region-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 8px;
+  }
 }
 
 .region-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 
 .region-percentage {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 
 .region-bar {
-  height: 8px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+
+  @media (min-width: 1400px) {
+    height: 8px;
+    margin-bottom: 6px;
+  }
 }
 
 .region-fill {
@@ -826,14 +1021,22 @@ onUnmounted(() => {
 }
 
 .region-count {
-  font-size: 12px;
+  font-size: 11px;
   color: rgba(255, 255, 255, 0.6);
+
+  @media (min-width: 1400px) {
+    font-size: 12px;
+  }
 }
 
 .empty-region {
   text-align: center;
   color: rgba(255, 255, 255, 0.3);
-  padding: 40px;
+  padding: 30px;
+
+  @media (min-width: 1400px) {
+    padding: 40px;
+  }
 }
 
 .province-list {

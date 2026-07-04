@@ -368,9 +368,13 @@ onMounted(() => {
 
 <style scoped>
 .staff-management-container {
-  padding: 24px;
+  padding: 16px;
   background: #f5f7fa;
   min-height: 100vh;
+
+  @media (min-width: 1400px) {
+    padding: 24px;
+  }
 }
 
 .staff-management-container > h2 {
@@ -378,30 +382,49 @@ onMounted(() => {
 }
 
 .page-header {
-  padding: 16px 0 20px;
+  padding: 12px 0 16px;
   border-bottom: 1px solid #e8e8e8;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 16px 0 20px;
+    margin-bottom: 20px;
+  }
 }
 .page-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #1f1f1f;
+
+  @media (min-width: 1400px) {
+    font-size: 18px;
+  }
 }
 
 /* --- 搜索区域样式 --- */
 .search-card {
   background: #fff;
-  padding: 20px;
+  padding: 14px;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
 }
 
 .search-row {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  @media (min-width: 1400px) {
+    gap: 20px;
+  }
 }
 
 .search-item {
@@ -410,19 +433,30 @@ onMounted(() => {
   flex: 0 0 auto;
 }
 .search-item label {
-  width: 80px;
+  width: 70px;
   color: #606266;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   flex-shrink: 0;
+
+  @media (min-width: 1400px) {
+    width: 80px;
+    font-size: 14px;
+  }
 }
 .search-item input {
-  width: 200px;
-  padding: 10px 12px;
+  width: 180px;
+  padding: 8px 10px;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13px;
   transition: border-color 0.3s;
+
+  @media (min-width: 1400px) {
+    width: 200px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
 }
 .search-item input:focus {
   outline: none;
@@ -432,17 +466,26 @@ onMounted(() => {
 
 .button-group {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   margin-left: auto;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+  }
 }
 .btn-search {
   background: #409eff;
   color: #fff;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }
 .btn-search:hover {
   background: #66b1ff;
@@ -450,44 +493,66 @@ onMounted(() => {
 .btn-reset {
   background: #f5f7fa;
   color: #606266;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }
 
 /* --- 表格区域样式 --- */
 .table-card {
   background: #fff;
-  padding: 20px;
+  padding: 14px;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .action-bar {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 16px;
+  }
 }
 
 .btn-primary {
   background: #409eff;
   color: #fff;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }
 .btn-primary:hover {
   background: #66b1ff;
 }
 
 .btn-primary .icon {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
+
+  @media (min-width: 1400px) {
+    font-size: 16px;
+  }
 }
 
 .btn-link {
@@ -495,15 +560,23 @@ onMounted(() => {
   color: #409eff;
   border: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   padding: 4px 8px;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 .btn-link:hover {
   color: #66b1ff;
 }
 
 .table-wrapper {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 20px;
+  }
 }
 
 .data-table {
@@ -513,9 +586,15 @@ onMounted(() => {
 
 .data-table th,
 .data-table td {
-  padding: 12px 16px;
+  padding: 8px 12px;
   border-bottom: 1px solid #ebeef5;
   text-align: left;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
 }
 
 .data-table th {
@@ -530,17 +609,26 @@ onMounted(() => {
 
 .tag {
   display: inline-block;
-  padding: 4px 12px;
+  padding: 3px 10px;
   background: #ecf5ff;
   color: #409eff;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 4px 12px;
+    font-size: 13px;
+  }
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px 20px;
   color: #909399;
+
+  @media (min-width: 1400px) {
+    padding: 60px 20px;
+  }
 }
 
 /* --- 弹窗样式 --- */
@@ -560,24 +648,36 @@ onMounted(() => {
 .modal-content {
   background: #fff;
   border-radius: 8px;
-  width: 480px;
+  width: 440px;
   max-width: 90%;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+
+  @media (min-width: 1400px) {
+    width: 480px;
+  }
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-bottom: 1px solid #ebeef5;
+
+  @media (min-width: 1400px) {
+    padding: 16px 20px;
+  }
 }
 
 .modal-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #303133;
+
+  @media (min-width: 1400px) {
+    font-size: 16px;
+  }
 }
 
 .modal-close {
@@ -594,11 +694,19 @@ onMounted(() => {
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .form-item {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 18px;
+  }
 }
 
 .form-item:last-child {
@@ -607,10 +715,15 @@ onMounted(() => {
 
 .form-item label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
+  margin-bottom: 6px;
+  font-size: 13px;
   color: #606266;
   font-weight: 500;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
 }
 
 .form-item .required {
@@ -621,11 +734,16 @@ onMounted(() => {
 .form-item input,
 .form-item select {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13px;
   box-sizing: border-box;
+
+  @media (min-width: 1400px) {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
 }
 
 .form-item input:focus,
@@ -638,19 +756,29 @@ onMounted(() => {
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 14px 18px;
   border-top: 1px solid #ebeef5;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+    padding: 16px 20px;
+  }
 }
 
 .btn-cancel {
   background: #fff;
   color: #606266;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }
 .btn-cancel:hover {
   border-color: #409eff;
@@ -660,11 +788,16 @@ onMounted(() => {
 .btn-confirm {
   background: #409eff;
   color: #fff;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }
 .btn-confirm:hover:not(:disabled) {
   background: #66b1ff;

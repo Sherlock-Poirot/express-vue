@@ -647,30 +647,49 @@ function doSign(row) {
 
 <style scoped>
 .bill-management-page {
-  padding: 20px;
+  padding: 16px;
   background: #f5f7fa;
   min-height: 100vh;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 h2 {
-  margin: 0 0 16px 0;
-  font-size: 20px;
+  margin: 0 0 14px 0;
+  font-size: 18px;
   color: #333;
+
+  @media (min-width: 1400px) {
+    margin: 0 0 16px 0;
+    font-size: 20px;
+  }
 }
 
 .search-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
 }
 
 .action-toolbar {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
 }
 
 .search-item {
@@ -682,19 +701,36 @@ h2 {
 .search-item label {
   font-weight: 500;
   color: #333;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 
 .search-item input {
-  padding: 6px 10px;
+  padding: 5px 10px;
   border: 1px solid #ddd;
   border-radius: 6px;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
 }
 
 button {
-  padding: 6px 14px;
+  padding: 5px 12px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 6px 14px;
+    font-size: 14px;
+  }
 }
 
 .search-btn {
@@ -711,9 +747,15 @@ button {
 }
 
 .tab-item {
-  padding: 10px 24px;
+  padding: 8px 20px;
   cursor: pointer;
   background: #f5f7fa;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 24px;
+    font-size: 14px;
+  }
 }
 
 .tab-item.active {
@@ -735,10 +777,16 @@ table {
 
 th {
   background: #fafafa;
-  padding: 12px;
+  padding: 8px 8px;
   border: 1px solid #ebeef5;
   font-weight: 600;
   text-align: center;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 12px;
+    font-size: 14px;
+  }
 }
 
 th.sortable {
@@ -763,9 +811,15 @@ th.sortable:hover {
 }
 
 td {
-  padding: 12px;
+  padding: 8px 8px;
   border: 1px solid #ebeef5;
   text-align: center;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 12px;
+    font-size: 14px;
+  }
 }
 
 .edit-btn {
@@ -794,44 +848,70 @@ td {
 .modal-content {
   background: #fff;
   width: 90%;
-  max-width: 500px;
+  max-width: 460px;
   border-radius: 12px;
   overflow: hidden;
+
+  @media (min-width: 1400px) {
+    max-width: 500px;
+  }
 }
 
 .modal-header {
-  padding: 16px 20px;
+  padding: 14px 18px;
   background: #fafafa;
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  @media (min-width: 1400px) {
+    padding: 16px 20px;
+  }
 }
 
 .modal-footer {
-  padding: 16px 20px;
+  padding: 14px 18px;
   background: #fafafa;
   display: flex;
   justify-content: flex-end;
   border-top: 1px solid #ebeef5;
+
+  @media (min-width: 1400px) {
+    padding: 16px 20px;
+  }
 }
 
 .validate-modal {
-  max-width: 700px;
+  max-width: 650px;
+
+  @media (min-width: 1400px) {
+    max-width: 700px;
+  }
 }
 
 .validate-body {
-  padding: 20px;
+  padding: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .validate-summary {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-radius: 8px;
-  margin-bottom: 16px;
-  font-size: 16px;
+  margin-bottom: 14px;
+  font-size: 14px;
   font-weight: 500;
+
+  @media (min-width: 1400px) {
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-size: 16px;
+  }
 }
 
 .validate-summary.success {

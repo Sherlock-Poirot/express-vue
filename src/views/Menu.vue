@@ -150,25 +150,41 @@ onMounted(() => {
 
 <style scoped>
 .page-container {
-  padding: 24px;
+  padding: 16px;
   background: #f5f7fa;
   min-height: 100vh;
+
+  @media (min-width: 1400px) {
+    padding: 24px;
+  }
 }
 
 .action-bar {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 20px;
+  }
 }
 
 .table-box {
   background: white;
   border-radius: 8px;
-  padding: 20px;
+  padding: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .buttons-cell {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
+
+  @media (min-width: 1400px) {
+    gap: 8px;
+  }
 }
 
 .button-tag {
@@ -180,17 +196,30 @@ onMounted(() => {
 }
 
 :deep(.el-table) {
-  font-size: 14px;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 
 :deep(.el-table th) {
   background-color: #fafafa;
   color: #606266;
   font-weight: 500;
+  padding: 8px 8px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 12px;
+  }
 }
 
 :deep(.el-table td) {
-  padding: 12px 16px;
+  padding: 8px 8px;
+
+  @media (min-width: 1400px) {
+    padding: 12px 16px;
+  }
 }
 
 :deep(.el-table--border th) {

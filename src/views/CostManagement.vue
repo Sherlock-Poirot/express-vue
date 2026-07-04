@@ -367,18 +367,26 @@ onMounted(() => {
 
 <style scoped>
 .cost-management-page {
-  padding: 20px;
+  padding: 16px;
   background: #f5f7fa;
   min-height: 100vh;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
   gap: 10px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 20px;
+  }
 }
 
 .search-section {
@@ -391,16 +399,18 @@ onMounted(() => {
   padding: 6px 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
+  font-size: 14px;
 }
 
 .search-input {
   padding: 6px 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
+  font-size: 14px;
 }
 
 .btn {
-  padding: 6px 16px;
+  padding: 6px 14px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -415,7 +425,7 @@ onMounted(() => {
 .btn-edit {
   background: #52c41a;
   color: #fff;
-  padding: 4px 10px;
+  padding: 4px 8px;
   font-size: 12px;
   margin-right: 6px;
 }
@@ -423,7 +433,7 @@ onMounted(() => {
 .btn-delete {
   background: #ff4d4f;
   color: #fff;
-  padding: 4px 10px;
+  padding: 4px 8px;
   font-size: 12px;
 }
 
@@ -457,21 +467,31 @@ onMounted(() => {
 
 .summary-card {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 16px;
-  padding: 16px 20px;
+  padding: 12px 16px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   flex-wrap: wrap;
+
+  @media (min-width: 1400px) {
+    gap: 16px;
+    padding: 16px 20px;
+  }
 }
 
 .summary-item {
   display: flex;
   flex-direction: column;
-  min-width: 100px;
-  padding: 8px 16px;
+  min-width: 90px;
+  padding: 6px 12px;
   border-right: 1px solid #f0f0f0;
+
+  @media (min-width: 1400px) {
+    min-width: 100px;
+    padding: 8px 16px;
+  }
 }
 
 .summary-item:last-child {
@@ -492,9 +512,13 @@ onMounted(() => {
 }
 
 .summary-value {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #333;
+
+  @media (min-width: 1400px) {
+    font-size: 18px;
+  }
 }
 
 .summary-value.total-cost {
@@ -515,19 +539,29 @@ table {
 
 th {
   background: #fafafa;
-  padding: 12px 10px;
+  padding: 8px 8px;
   border-bottom: 1px solid #ebeef5;
   font-weight: 600;
   text-align: left;
-  font-size: 14px;
+  font-size: 12px;
   color: #333;
+
+  @media (min-width: 1400px) {
+    padding: 12px 10px;
+    font-size: 14px;
+  }
 }
 
 td {
-  padding: 12px 10px;
+  padding: 8px 8px;
   border-bottom: 1px solid #ebeef5;
-  font-size: 14px;
+  font-size: 12px;
   color: #666;
+
+  @media (min-width: 1400px) {
+    padding: 12px 10px;
+    font-size: 14px;
+  }
 }
 
 tbody tr:hover {
@@ -559,6 +593,10 @@ tbody tr:hover {
   max-width: 480px;
   border-radius: 12px;
   overflow: hidden;
+
+  @media (min-width: 1400px) {
+    max-width: 520px;
+  }
 }
 
 .modal-header {
@@ -581,11 +619,19 @@ tbody tr:hover {
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 16px;
+  }
 }
 
 .form-group label {
@@ -601,18 +647,5 @@ tbody tr:hover {
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 14px;
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.modal-footer {
-  padding: 16px 20px;
-  border-top: 1px solid #eee;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
 }
 </style>

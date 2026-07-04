@@ -627,27 +627,45 @@ async function handleImport() {
   width: 100%;
   background: #fff;
   border-radius: 8px;
-  padding: 20px;
+  padding: 16px;
   box-shadow: 0 2px 10px #00000008;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 .page-container h2 {
-  margin-bottom: 18px;
-  font-size: 18px;
+  margin-bottom: 14px;
+  font-size: 16px;
   color: #333;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 18px;
+    font-size: 18px;
+  }
 }
 .tool-box {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 16px;
+    gap: 12px;
+  }
 }
 .search-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+  }
 }
 .search-item {
   display: flex;
@@ -655,22 +673,38 @@ async function handleImport() {
   gap: 6px;
 }
 .search-item label {
-  font-size: 14px;
+  font-size: 13px;
   color: #555;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 .search-item input {
-  padding: 7px 10px;
+  padding: 5px 10px;
   border: 1px solid #dcdcdc;
   border-radius: 4px;
   outline: none;
-  width: 160px;
+  width: 140px;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 7px 10px;
+    width: 160px;
+    font-size: 14px;
+  }
 }
 .btn {
-  padding: 7px 14px;
+  padding: 5px 12px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 7px 14px;
+    font-size: 14px;
+  }
 }
 .btn.search {
   background: #409eff;
@@ -691,11 +725,19 @@ async function handleImport() {
 .btn.edit {
   background: #409eff;
   color: white;
-  padding: 4px 10px;
+  padding: 3px 8px;
+
+  @media (min-width: 1400px) {
+    padding: 4px 10px;
+  }
 }
 .btn-group {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+
+  @media (min-width: 1400px) {
+    gap: 8px;
+  }
 }
 .table-box {
   border: 1px solid #e4e7ed;
@@ -708,16 +750,28 @@ table {
 }
 th {
   background: #fafafa;
-  padding: 12px;
+  padding: 8px 8px;
   text-align: center;
   font-weight: 600;
   color: #333;
   border: 1px solid #ebeef5;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 12px;
+    font-size: 14px;
+  }
 }
 td {
-  padding: 12px;
+  padding: 8px 8px;
   text-align: center;
   border: 1px solid #ebeef5;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 12px;
+    font-size: 14px;
+  }
 }
 tbody tr:hover {
   background: #fafafa;
@@ -738,50 +792,90 @@ tbody tr:hover {
 }
 .modal-content {
   background: #fff;
-  width: 700px;
+  width: 90%;
+  max-width: 600px;
   border-radius: 8px;
   overflow: hidden;
+
+  @media (min-width: 1400px) {
+    width: 700px;
+  }
 }
 .modal-header {
-  padding: 15px 20px;
+  padding: 14px 18px;
   background: #f8f8f8;
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  @media (min-width: 1400px) {
+    padding: 15px 20px;
+  }
 }
 .modal-header .close {
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
   color: #666;
+
+  @media (min-width: 1400px) {
+    font-size: 20px;
+  }
 }
 .modal-body {
-  padding: 20px;
+  padding: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 .modal-footer {
-  padding: 15px 20px;
+  padding: 14px 18px;
   text-align: right;
   border-top: 1px solid #eee;
+
+  @media (min-width: 1400px) {
+    padding: 15px 20px;
+  }
 }
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  @media (min-width: 1400px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
 }
 .form-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
+
+  @media (min-width: 1400px) {
+    gap: 6px;
+  }
 }
 .form-item label {
-  font-size: 14px;
+  font-size: 13px;
   color: #333;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 .form-item input,
 .form-item select {
-  padding: 8px 10px;
+  padding: 6px 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   outline: none;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
 }
 .red {
   color: red;
@@ -791,8 +885,8 @@ tbody tr:hover {
   position: absolute;
   top: 15px;
   right: 15px;
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   background-image: url("../public/logo.jpg");
   background-size: contain;
   background-repeat: no-repeat;
@@ -800,6 +894,11 @@ tbody tr:hover {
   opacity: 0.4;
   pointer-events: none;
   z-index: 10;
+
+  @media (min-width: 1400px) {
+    width: 120px;
+    height: 120px;
+  }
 }
 
 .select-wrapper {
@@ -807,21 +906,31 @@ tbody tr:hover {
 }
 .dropdown {
   position: absolute;
-  top: 34px;
+  top: 30px;
   left: 0;
   width: 100%;
-  max-height: 160px;
+  max-height: 140px;
   overflow-y: auto;
   background: #fff;
   border: 1px solid #dcdcdc;
   border-radius: 4px;
   z-index: 9999;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  @media (min-width: 1400px) {
+    top: 34px;
+    max-height: 160px;
+  }
 }
 .dropdown-item {
-  padding: 6px 10px;
+  padding: 5px 10px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
 }
 .dropdown-item:hover {
   background: #f0f7ff;

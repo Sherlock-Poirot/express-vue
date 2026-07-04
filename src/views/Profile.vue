@@ -97,41 +97,73 @@ onMounted(() => {
 .profile-container {
   display: flex;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .profile-card {
   background: white;
   border-radius: 8px;
-  padding: 40px;
+  padding: 28px;
   width: 100%;
-  max-width: 600px;
+  max-width: 500px;
+
+  @media (min-width: 1400px) {
+    padding: 40px;
+    max-width: 600px;
+  }
 }
 
 .avatar-section {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 20px;
+  }
 }
 
 .user-avatar {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  font-size: 48px;
+  font-size: 40px;
   font-weight: bold;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
+
+  @media (min-width: 1400px) {
+    font-size: 48px;
+    margin-bottom: 15px;
+  }
 }
 
 .user-name {
-  margin: 0 0 10px 0;
-  font-size: 24px;
+  margin: 0 0 8px 0;
+  font-size: 20px;
   color: #333;
+
+  @media (min-width: 1400px) {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+  }
 }
 
 .user-role {
   margin: 0;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
 }
 
 .info-form {
-  margin-top: 30px;
+  margin-top: 24px;
+
+  @media (min-width: 1400px) {
+    margin-top: 30px;
+  }
 }
 </style>

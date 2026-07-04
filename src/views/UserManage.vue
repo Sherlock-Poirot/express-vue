@@ -364,22 +364,39 @@ onMounted(() => {
 .page-container {
   background: white;
   border-radius: 8px;
-  padding: 20px;
+  padding: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .action-bar {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 20px;
+  }
 }
 
 .search-box {
   background: #f5f7fa;
-  padding: 15px;
+  padding: 12px;
   border-radius: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
 }
 
 .table-box {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 20px;
+  }
 }
 
 .pagination-box {
@@ -392,23 +409,36 @@ onMounted(() => {
 }
 
 .auth-tip {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   color: #606266;
-  font-size: 14px;
+  font-size: 13px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
 }
 
 .role-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+  }
 }
 
 .role-item {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid #ebeef5;
   border-radius: 4px;
   margin-right: 0 !important;
   transition: all 0.3s;
+
+  @media (min-width: 1400px) {
+    padding: 8px 12px;
+  }
 }
 
 .role-item:hover {
@@ -417,7 +447,35 @@ onMounted(() => {
 
 .empty-roles {
   text-align: center;
-  padding: 30px;
+  padding: 24px;
   color: #909399;
+
+  @media (min-width: 1400px) {
+    padding: 30px;
+  }
+}
+
+:deep(.el-table) {
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    font-size: 14px;
+  }
+}
+
+:deep(.el-table th) {
+  padding: 8px 8px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 12px;
+  }
+}
+
+:deep(.el-table td) {
+  padding: 8px 8px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 12px;
+  }
 }
 </style>

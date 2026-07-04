@@ -49,12 +49,22 @@ onMounted(() => {
 
 <style scoped>
 .area-container {
-  padding: 24px;
+  padding: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 24px;
+  }
 }
 
 h2 {
-  margin: 0 0 20px 0;
+  margin: 0 0 16px 0;
   color: #333;
+  font-size: 16px;
+
+  @media (min-width: 1400px) {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+  }
 }
 
 .table-wrapper {
@@ -72,17 +82,29 @@ table {
 th {
   background: linear-gradient(135deg, #667eea 0%, #79638f 100%);
   color: #fff;
-  padding: 12px 16px;
+  padding: 8px 8px;
   font-weight: 600;
   text-align: center;
   border: none;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
 }
 
 td {
-  padding: 12px 16px;
+  padding: 8px 8px;
   text-align: center;
   border-bottom: 1px solid #eee;
   color: #666;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
 }
 
 tbody tr:last-child td {

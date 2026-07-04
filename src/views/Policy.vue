@@ -239,31 +239,48 @@ onMounted(() => {
 
 <style scoped>
 .policy-container {
-  padding: 20px;
+  padding: 16px;
   min-height: 100vh;
   background: #f5f7fa;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .page-header {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 20px;
+  }
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+  }
 }
 
 .search-btn {
   background: #1890ff;
   color: #fff;
   border: none;
-  padding: 8px 20px;
+  padding: 6px 16px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   transition: background 0.3s;
+
+  @media (min-width: 1400px) {
+    padding: 8px 20px;
+    font-size: 14px;
+  }
 }
 
 .search-btn:hover {
@@ -284,22 +301,32 @@ table {
 
 th {
   background: #fafafa;
-  padding: 12px 10px;
+  padding: 8px 8px;
   border: 1px solid #ebeef5;
   font-weight: 600;
   text-align: center;
-  font-size: 14px;
+  font-size: 12px;
   color: #333;
   white-space: nowrap;
+
+  @media (min-width: 1400px) {
+    padding: 12px 10px;
+    font-size: 14px;
+  }
 }
 
 td {
-  padding: 10px 10px;
+  padding: 8px 8px;
   border: 1px solid #ebeef5;
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   color: #666;
   white-space: nowrap;
+
+  @media (min-width: 1400px) {
+    padding: 10px 10px;
+    font-size: 13px;
+  }
 }
 
 tbody tr.even-row {
@@ -314,12 +341,17 @@ tbody tr:hover {
   background: #52c41a;
   color: #fff;
   border: none;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
-  margin-right: 8px;
+  margin-right: 6px;
   transition: background 0.3s;
+
+  @media (min-width: 1400px) {
+    padding: 4px 12px;
+    margin-right: 8px;
+  }
 }
 
 .edit-btn:hover {
@@ -330,11 +362,15 @@ tbody tr:hover {
   background: #ff4d4f;
   color: #fff;
   border: none;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
   transition: background 0.3s;
+
+  @media (min-width: 1400px) {
+    padding: 4px 12px;
+  }
 }
 
 .delete-btn:hover {
@@ -357,30 +393,46 @@ tbody tr:hover {
 .modal-content {
   background: #fff;
   border-radius: 8px;
-  width: 450px;
+  width: 420px;
   max-width: 90%;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+
+  @media (min-width: 1400px) {
+    width: 450px;
+  }
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-bottom: 1px solid #ebeef5;
+
+  @media (min-width: 1400px) {
+    padding: 16px 20px;
+  }
 }
 
 .modal-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   color: #333;
+
+  @media (min-width: 1400px) {
+    font-size: 16px;
+  }
 }
 
 .modal-header .close {
-  font-size: 24px;
+  font-size: 22px;
   color: #999;
   cursor: pointer;
   line-height: 1;
+
+  @media (min-width: 1400px) {
+    font-size: 24px;
+  }
 }
 
 .modal-header .close:hover {
@@ -388,29 +440,49 @@ tbody tr:hover {
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+  }
 }
 
 .form-item {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 16px;
+  }
 }
 
 .form-item label {
   display: inline-block;
-  width: 120px;
+  width: 110px;
   text-align: right;
-  margin-right: 12px;
-  font-size: 14px;
+  margin-right: 10px;
+  font-size: 13px;
   color: #333;
+
+  @media (min-width: 1400px) {
+    width: 120px;
+    margin-right: 12px;
+    font-size: 14px;
+  }
 }
 
 .form-item input,
 .form-item select {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: 1px solid #d9d9d9;
   border-radius: 4px;
-  font-size: 14px;
-  width: 220px;
+  font-size: 13px;
+  width: 200px;
+
+  @media (min-width: 1400px) {
+    padding: 8px 12px;
+    font-size: 14px;
+    width: 220px;
+  }
 }
 
 .form-item input:focus,
@@ -422,20 +494,30 @@ tbody tr:hover {
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 14px 18px;
   border-top: 1px solid #ebeef5;
+
+  @media (min-width: 1400px) {
+    gap: 12px;
+    padding: 16px 20px;
+  }
 }
 
 .cancel-btn {
   background: #f5f5f5;
   color: #666;
   border: none;
-  padding: 8px 20px;
+  padding: 6px 16px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   transition: background 0.3s;
+
+  @media (min-width: 1400px) {
+    padding: 8px 20px;
+    font-size: 14px;
+  }
 }
 
 .cancel-btn:hover {
@@ -446,11 +528,16 @@ tbody tr:hover {
   background: #1890ff;
   color: #fff;
   border: none;
-  padding: 8px 20px;
+  padding: 6px 16px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   transition: background 0.3s;
+
+  @media (min-width: 1400px) {
+    padding: 8px 20px;
+    font-size: 14px;
+  }
 }
 
 .confirm-btn:hover {

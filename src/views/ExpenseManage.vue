@@ -491,29 +491,50 @@ onMounted(() => {
 .page-container {
   background: white;
   border-radius: 8px;
-  padding: 20px;
+  padding: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 20px;
+    border-radius: 12px;
+  }
 }
 
 .action-bar {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   display: flex;
   gap: 10px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 20px;
+  }
 }
 
 .search-box {
   background: #f5f7fa;
-  padding: 15px;
+  padding: 12px;
   border-radius: 4px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+
+  @media (min-width: 1400px) {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+  }
 }
 
 .table-box {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 20px;
+  }
 }
 
 .pagination-box {
   display: flex;
   justify-content: flex-end;
+  padding: 8px 0;
 }
 
 .amount {
@@ -541,25 +562,38 @@ onMounted(() => {
   font-weight: 500;
 }
 
-:deep(.el-table) {
-  font-size: 14px;
+@media (max-width: 1366px) {
+  :deep(.el-table) {
+    font-size: 12px;
+  }
+  :deep(.el-table th) {
+    font-size: 12px;
+    padding: 8px 6px;
+  }
+  :deep(.el-table td) {
+    padding: 8px 6px;
+  }
 }
 
-:deep(.el-table th) {
-  background-color: #fafafa;
-  color: #606266;
-  font-weight: 500;
-}
-
-:deep(.el-table td) {
-  padding: 10px 12px;
-}
-
-:deep(.el-table--border th) {
-  border-bottom: 1px solid #ebeef5;
-}
-
-:deep(.el-table--border td) {
-  border-bottom: 1px solid #ebeef5;
+@media (min-width: 1400px) {
+  :deep(.el-table) {
+    font-size: 14px;
+  }
+  :deep(.el-table th) {
+    font-size: 14px;
+    background-color: #fafafa;
+    color: #606266;
+    font-weight: 500;
+    padding: 12px 14px;
+  }
+  :deep(.el-table td) {
+    padding: 12px 14px;
+  }
+  :deep(.el-table--border th) {
+    border-bottom: 1px solid #ebeef5;
+  }
+  :deep(.el-table--border td) {
+    border-bottom: 1px solid #ebeef5;
+  }
 }
 </style>
