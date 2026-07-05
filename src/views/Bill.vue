@@ -47,6 +47,9 @@
       <button class="search-btn" @click="doExportDetail" v-if="hasBtnPermission('明细导出')">
         明细导出
       </button>
+      <button class="search-btn" @click="openDiffImport" v-if="hasBtnPermission('导入差异重量')">
+        导入差异重量
+      </button>
     </div>
 
     <!-- TAB 切换：直营 / 业务员 / 承包区 -->
@@ -164,6 +167,28 @@
       </div>
     </div>
 
+    <!-- 导入差异重量 弹窗 -->
+    <div class="modal" v-if="diffImportVisible" @click.self="closeDiffImport">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>导入差异重量数据</h3>
+          <span class="close" @click="closeDiffImport">×</span>
+        </div>
+        <div style="padding: 20px">
+          <input type="file" ref="diffFileRef" accept=".xlsx,.xls" />
+          <div style="margin-top: 15px">
+            <button
+              class="search-btn"
+              @click="submitDiffImport"
+              :disabled="diffImporting"
+            >
+              {{ diffImporting ? "上传中..." : "确认导入" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 数据校验结果 弹窗 -->
     <div class="modal" v-if="validateVisible" @click.self="closeValidate">
       <div class="modal-content validate-modal">
@@ -250,6 +275,9 @@ const total = ref(0);
 const importVisible = ref(false);
 const fileRef = ref(null);
 const importing = ref(false);
+const diffImportVisible = ref(false);
+const diffFileRef = ref(null);
+const diffImporting = ref(false);
 const validateVisible = ref(false);
 const validateResult = reactive({
   valid: true,
@@ -363,6 +391,45 @@ async function submitImport() {
   } catch (err) {
     ElMessage.error("上传失败：" + (err.message || err));
     importing.value = false;
+  }
+}
+
+function openDiffImport() {
+  diffImportVisible.value = true;
+}
+
+function closeDiffImport() {
+  diffImportVisible.value = false;
+}
+
+async function submitDiffImport() {
+  const file = diffFileRef.value?.files?.[0];
+
+  if (!file) {
+    ElMessage.warning("请选择Excel文件");
+    return;
+  }
+
+  try {
+    diffImporting.value = true;
+    closeDiffImport();
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await axios.post("/api/waybill/import/diff", formData);
+
+    if (res.data.code === 200) {
+      const taskNo = res.data.data;
+      ElMessage.success("上传成功，后台正在导入差异重量数据...");
+      startPollTask(taskNo);
+    } else {
+      ElMessage.error(res.data.message || "上传失败");
+      diffImporting.value = false;
+    }
+  } catch (err) {
+    ElMessage.error("上传失败：" + (err.message || err));
+    diffImporting.value = false;
   }
 }
 
