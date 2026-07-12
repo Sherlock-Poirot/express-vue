@@ -793,12 +793,12 @@ tbody tr:hover {
 .modal-content {
   background: #fff;
   width: 90%;
-  max-width: 600px;
+  max-width: 750px;
   border-radius: 8px;
   overflow: hidden;
 
   @media (min-width: 1400px) {
-    width: 700px;
+    width: 850px;
   }
 }
 .modal-header {
