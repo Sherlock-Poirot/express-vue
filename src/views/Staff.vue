@@ -31,7 +31,7 @@
     <div class="table-card">
       <!-- 操作按钮 -->
       <div class="action-bar">
-        <button class="btn-primary" @click="handleAdd" v-if="hasBtnPermission('新增', '新增员工')">
+        <button class="btn-primary" @click="handleAdd" v-if="hasBtnPermission('settlement:employee:add', '新增员工', '新增')">
           <span class="icon">+</span>
           新增
         </button>
@@ -74,7 +74,7 @@
               <td>{{ item.phone || "—" }}</td>
               <td>{{ item.entryDate }}</td>
               <td class="text-center">
-                <button class="btn-link" @click="handleEdit(item)" v-if="hasBtnPermission('编辑', '修改')">编辑</button>
+                <button class="btn-link" @click="handleEdit(item)" v-if="hasBtnPermission('settlement:employee:edit', '编辑员工', '编辑', '修改')">编辑</button>
               </td>
             </tr>
           </tbody>

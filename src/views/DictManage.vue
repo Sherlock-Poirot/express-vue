@@ -2,16 +2,16 @@
   <div class="page-container">
     <div class="search-box">
       <el-form :inline="true" :model="searchForm">
-        <el-form-item label="字典名称" v-if="hasBtnPermission('查询字典', '查询')">
+        <el-form-item label="字典名称" v-if="hasBtnPermission('sys:dict:query', '查询字典', '查询')">
           <el-input v-model="searchForm.dictName" placeholder="请输入字典名称" clearable />
         </el-form-item>
-        <el-form-item label="字典编码" v-if="hasBtnPermission('查询字典', '查询')">
+        <el-form-item label="字典编码" v-if="hasBtnPermission('sys:dict:query', '查询字典', '查询')">
           <el-input v-model="searchForm.dictCode" placeholder="请输入字典编码" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="getDictList">搜索</el-button>
           <el-button @click="resetSearch">重置</el-button>
-          <el-button type="primary" @click="handleAddDict" v-if="hasBtnPermission('新增字典', '新增')">
+          <el-button type="primary" @click="handleAddDict" v-if="hasBtnPermission('sys:dict:add', '新增字典', '新增')">
             新增
           </el-button>
         </el-form-item>
@@ -39,9 +39,9 @@
         </el-table-column>
         <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleEditDict(row)" v-if="hasBtnPermission('编辑字典', '编辑', '修改')">编辑</el-button>
-            <el-button type="success" size="small" @click="handleDictItems(row)" v-if="hasBtnPermission('字典项管理', '管理')">字典项</el-button>
-            <el-button type="danger" size="small" @click="handleDeleteDict(row)" v-if="hasBtnPermission('删除字典', '删除', '移除')">删除</el-button>
+            <el-button type="primary" size="small" @click="handleEditDict(row)" v-if="hasBtnPermission('sys:dict:edit', '编辑字典', '编辑', '修改')">编辑</el-button>
+            <el-button type="success" size="small" @click="handleDictItems(row)" v-if="hasBtnPermission('sys:dict:item:manage', '字典项管理', '管理')">字典项</el-button>
+            <el-button type="danger" size="small" @click="handleDeleteDict(row)" v-if="hasBtnPermission('sys:dict:delete', '删除字典', '删除', '移除')">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -98,7 +98,7 @@
       destroy-on-close
     >
       <div class="dict-item-action">
-        <el-button type="primary" size="small" @click="handleAddDictItem" v-if="hasBtnPermission('新增字典项', '新增')">
+        <el-button type="primary" size="small" @click="handleAddDictItem" v-if="hasBtnPermission('sys:dict:item:add', '新增字典项', '新增')">
           <el-icon><Plus /></el-icon>
           新增字典项
         </el-button>
@@ -119,8 +119,8 @@
           <el-table-column prop="sortOrder" label="排序" width="80" />
           <el-table-column label="操作" width="180">
             <template #default="{ row }">
-              <el-button type="primary" size="small" @click="handleEditDictItem(row)" v-if="hasBtnPermission('编辑字典项', '编辑', '修改')">编辑</el-button>
-              <el-button type="danger" size="small" @click="handleDeleteDictItem(row)" v-if="hasBtnPermission('删除字典项', '删除', '移除')">删除</el-button>
+              <el-button type="primary" size="small" @click="handleEditDictItem(row)" v-if="hasBtnPermission('sys:dict:item:edit', '编辑字典项', '编辑', '修改')">编辑</el-button>
+              <el-button type="danger" size="small" @click="handleDeleteDictItem(row)" v-if="hasBtnPermission('sys:dict:item:delete', '删除字典项', '删除', '移除')">删除</el-button>
             </template>
           </el-table-column>
         </el-table>

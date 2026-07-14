@@ -88,7 +88,7 @@
             <el-form-item>
               <el-button type="primary" @click="getFakeSignList">查询</el-button>
               <el-button @click="resetFakeSignSearch">重置</el-button>
-              <el-button type="primary" @click="showFakeSignImport = true" v-if="hasBtnPermission('导入虚假签收记录', '导入')">导入</el-button>
+              <el-button type="primary" @click="showFakeSignImport = true" v-if="hasBtnPermission('report:quality:fakeSign:import', '导入虚假签收记录', '导入')">导入</el-button>
             </el-form-item>
           </el-form>
         </div>
@@ -156,7 +156,7 @@
             <el-form-item>
               <el-button type="primary" @click="getCollectionList">查询</el-button>
               <el-button @click="resetCollectionSearch">重置</el-button>
-              <el-button type="primary" @click="showCollectionImport = true" v-if="hasBtnPermission('导入散单首揽记录', '导入')">导入</el-button>
+              <el-button type="primary" @click="showCollectionImport = true" v-if="hasBtnPermission('report:quality:collection:import', '导入散单首揽记录', '导入')">导入</el-button>
             </el-form-item>
           </el-form>
         </div>

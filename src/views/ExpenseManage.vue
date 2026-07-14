@@ -1,11 +1,11 @@
 <template>
   <div class="page-container">
     <div class="action-bar">
-      <el-button type="primary" @click="handleAdd" v-if="hasBtnPermission('新增报销', '新增')">
+      <el-button type="primary" @click="handleAdd" v-if="hasBtnPermission('finance:expense:add', '新增报销', '新增')">
         <el-icon><Plus /></el-icon>
         新增报销
       </el-button>
-      <el-button type="danger" @click="handleBatchDelete" v-if="hasBtnPermission('批量删除报销', '删除', '移除')" :disabled="selectedIds.length === 0">
+      <el-button type="danger" @click="handleBatchDelete" v-if="hasBtnPermission('finance:expense:batchDelete', '批量删除报销', '删除', '移除')" :disabled="selectedIds.length === 0">
         <el-icon><Delete /></el-icon>
         批量删除
       </el-button>
@@ -13,12 +13,12 @@
 
     <div class="search-box">
       <el-form :inline="true" :model="searchForm">
-        <el-form-item label="报销类型" v-if="hasBtnPermission('查询报销', '查询')">
+        <el-form-item label="报销类型" v-if="hasBtnPermission('finance:expense:query', '查询报销', '查询')">
           <el-select v-model="searchForm.expenseType" placeholder="请选择报销类型" clearable style="width: 120px">
             <el-option v-for="item in expenseTypeOptions" :key="item.dictValue" :value="item.dictValue" :label="item.dictLabel" />
           </el-select>
         </el-form-item>
-        <el-form-item label="月份" v-if="hasBtnPermission('查询报销', '查询')">
+        <el-form-item label="月份" v-if="hasBtnPermission('finance:expense:query', '查询报销', '查询')">
           <el-date-picker
             v-model="searchForm.month"
             type="month"
@@ -28,12 +28,12 @@
             clearable style="width: 120px"
           />
         </el-form-item>
-        <el-form-item label="审核状态" v-if="hasBtnPermission('查询报销', '查询')">
+        <el-form-item label="审核状态" v-if="hasBtnPermission('finance:expense:query', '查询报销', '查询')">
           <el-select v-model="searchForm.status" placeholder="请选择审核状态" clearable style="width: 120px">
             <el-option v-for="item in auditStatusOptions" :key="item.dictValue" :value="item.dictValue" :label="item.dictLabel" />
           </el-select>
         </el-form-item>
-        <el-form-item label="报销人" v-if="hasBtnPermission('查询报销', '查询')">
+        <el-form-item label="报销人" v-if="hasBtnPermission('finance:expense:query', '查询报销', '查询')">
           <el-input v-model="searchForm.applicant" placeholder="请输入报销人" clearable />
         </el-form-item>
         <el-form-item>
@@ -80,10 +80,10 @@
         <el-table-column prop="remark" label="备注" />
         <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleEdit(row)" v-if="hasBtnPermission('编辑报销', '编辑', '修改')">编辑</el-button>
-            <el-button type="success" size="small" @click="handleAudit(row, 1)" v-if="hasBtnPermission('审核通过', '审核') && row.status === 0">通过</el-button>
-            <el-button type="warning" size="small" @click="handleAudit(row, 2)" v-if="hasBtnPermission('审核拒绝', '审核') && row.status === 0">拒绝</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(row)" v-if="hasBtnPermission('删除报销', '删除', '移除')">删除</el-button>
+            <el-button type="primary" size="small" @click="handleEdit(row)" v-if="hasBtnPermission('finance:expense:edit', '编辑报销', '编辑', '修改')">编辑</el-button>
+            <el-button type="success" size="small" @click="handleAudit(row, 1)" v-if="hasBtnPermission('finance:expense:auditPass', '审核通过', '审核') && row.status === 0">通过</el-button>
+            <el-button type="warning" size="small" @click="handleAudit(row, 2)" v-if="hasBtnPermission('finance:expense:auditReject', '审核拒绝', '审核') && row.status === 0">拒绝</el-button>
+            <el-button type="danger" size="small" @click="handleDelete(row)" v-if="hasBtnPermission('finance:expense:delete', '删除报销', '删除', '移除')">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

@@ -2,7 +2,7 @@
   <div class="policy-container">
     <div class="page-header">
       <div class="header-actions">
-        <button class="search-btn" @click="openAddModal" v-if="hasBtnPermission('新增政策', '新增')">新增政策</button>
+        <button class="search-btn" @click="openAddModal" v-if="hasBtnPermission('report:policy:add', '新增政策', '新增')">新增政策</button>
       </div>
     </div>
 
@@ -30,8 +30,8 @@
             <td>{{ formatDate(item.createTime) }}</td>
             <td>{{ formatDate(item.updateTime) }}</td>
             <td>
-              <button class="edit-btn" @click="openEditModal(item)" v-if="hasBtnPermission('编辑', '修改')">编辑</button>
-              <button class="delete-btn" @click="handleDelete(item.id)" v-if="hasBtnPermission('删除', '移除')">删除</button>
+              <button class="edit-btn" @click="openEditModal(item)" v-if="hasBtnPermission('report:policy:edit', '编辑政策', '编辑', '修改')">编辑</button>
+              <button class="delete-btn" @click="handleDelete(item.id)" v-if="hasBtnPermission('report:policy:delete', '删除政策', '删除', '移除')">删除</button>
             </td>
           </tr>
         </tbody>

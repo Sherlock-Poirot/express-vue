@@ -6,8 +6,8 @@
         <input type="date" v-model="query.date" />
       </div>
       <button class="search-btn" @click="doSearch">查询</button>
-      <button class="search-btn" @click="openUpload" v-if="hasBtnPermission('数据上传', '上传')">数据上传</button>
-      <button class="search-btn" @click="doSyncAndCalculate" v-if="hasBtnPermission('清洗计算', '计算')">清洗计算</button>
+      <button class="search-btn" @click="openUpload" v-if="hasBtnPermission('report:profit:upload', '数据上传', '上传')">数据上传</button>
+      <button class="search-btn" @click="doSyncAndCalculate" v-if="hasBtnPermission('report:profit:calculate', '清洗计算', '计算')">清洗计算</button>
     </div>
 
     <div class="summary-card">

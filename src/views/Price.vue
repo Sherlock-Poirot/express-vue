@@ -21,7 +21,7 @@
       <button @click="doSearch()" class="search-btn">搜索</button>
 
       <!-- 👇 在这里加【新增】按钮 -->
-      <button @click="openAddCustomerModal" class="add-btn" v-if="hasBtnPermission('新增', '新增客户')">新增</button>
+      <button @click="openAddCustomerModal" class="add-btn" v-if="hasBtnPermission('settlement:price:addCustomer', '新增客户', '新增')">新增</button>
 
       <!-- 👇 批量删除 -->
       <button @click="handleBatchDelete" class="delete-btn" v-if="hasBtnPermission('批量删除', '删除')">批量删除</button>
@@ -83,7 +83,7 @@
           </td>
 
           <td>
-            <button class="edit-btn" @click.stop="toEdit(item)" v-if="hasBtnPermission('编辑', '修改')">编辑</button>
+            <button class="edit-btn" @click.stop="toEdit(item)" v-if="hasBtnPermission('settlement:price:editCustomer', '编辑客户', '编辑', '修改')">编辑</button>
 
             <!-- 👇 新增：新增价格按钮 -->
             <button class="add-price-btn" @click.stop="openAddPriceModal(item)" v-if="hasBtnPermission('新增价格', '新增')">

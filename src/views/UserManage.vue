@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="action-bar">
-      <el-button type="primary" @click="handleAdd" v-if="hasBtnPermission('新增用户', '新增')">
+      <el-button type="primary" @click="handleAdd" v-if="hasBtnPermission('sys:user:add', '新增用户', '新增')">
         <el-icon><Plus /></el-icon>
         新增用户
       </el-button>
@@ -48,17 +48,17 @@
         </el-table-column>
         <el-table-column label="操作" width="380" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleEdit(row)" v-if="hasBtnPermission('编辑用户', '编辑', '修改')">编辑</el-button>
+            <el-button type="primary" size="small" @click="handleEdit(row)" v-if="hasBtnPermission('sys:user:edit', '编辑用户', '编辑', '修改')">编辑</el-button>
             <el-button 
               size="small" 
               :type="row.status === 1 ? 'warning' : 'success'"
               @click="handleStatus(row)"
-              v-if="hasBtnPermission('禁用/启用用户', '禁用', '启用', '状态')"
+              v-if="hasBtnPermission('sys:user:status', '禁用/启用用户', '禁用', '启用', '状态')"
             >
               {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
-            <el-button type="info" size="small" @click="handleAuthorize(row)" v-if="hasBtnPermission('用户授权', '授权', '角色授权')">授权</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(row)" v-if="hasBtnPermission('删除用户', '删除', '移除')">删除</el-button>
+            <el-button type="info" size="small" @click="handleAuthorize(row)" v-if="hasBtnPermission('sys:user:authorize', '用户授权', '授权', '角色授权')">授权</el-button>
+            <el-button type="danger" size="small" @click="handleDelete(row)" v-if="hasBtnPermission('sys:user:delete', '删除用户', '删除', '移除')">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

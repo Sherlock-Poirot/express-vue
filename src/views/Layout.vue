@@ -303,7 +303,12 @@ const extractPermissions = (menus) => {
   const traverse = (items) => {
     items.forEach(item => {
       if (item.menuType === 3) {
-        perms.push(item.menuName)
+        if (item.menuName) {
+          perms.push(item.menuName)
+        }
+        if (item.menuCode) {
+          perms.push(item.menuCode)
+        }
       }
       if (item.children && item.children.length > 0) {
         traverse(item.children)

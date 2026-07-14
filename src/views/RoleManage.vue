@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
     <div class="action-bar">
-      <el-button type="primary" @click="handleAdd" v-if="hasBtnPermission('新增角色', '新增')">
+      <el-button type="primary" @click="handleAdd" v-if="hasBtnPermission('sys:role:add', '新增角色', '新增')">
         <el-icon><Plus /></el-icon>
         新增角色
       </el-button>
@@ -9,7 +9,7 @@
 
     <div class="search-box">
       <el-form :inline="true" :model="searchForm">
-        <el-form-item label="角色名称" v-if="hasBtnPermission('查询角色', '查询')">
+        <el-form-item label="角色名称" v-if="hasBtnPermission('sys:role:query', '查询角色', '查询')">
           <el-input v-model="searchForm.roleName" placeholder="请输入角色名称" clearable />
         </el-form-item>
         <el-form-item>
@@ -35,9 +35,9 @@
         <el-table-column prop="sortOrder" label="排序" width="80" />
         <el-table-column label="操作" width="300" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="handleEdit(row)" v-if="hasBtnPermission('编辑角色', '编辑', '修改')">编辑</el-button>
-            <el-button type="success" size="small" @click="handleMenuAuth(row)" v-if="hasBtnPermission('菜单授权', '授权')">菜单授权</el-button>
-            <el-button type="danger" size="small" @click="handleDelete(row)" v-if="hasBtnPermission('删除角色', '删除', '移除')">删除</el-button>
+            <el-button type="primary" size="small" @click="handleEdit(row)" v-if="hasBtnPermission('sys:role:edit', '编辑角色', '编辑', '修改')">编辑</el-button>
+            <el-button type="success" size="small" @click="handleMenuAuth(row)" v-if="hasBtnPermission('sys:role:menuAuth', '菜单授权', '授权')">菜单授权</el-button>
+            <el-button type="danger" size="small" @click="handleDelete(row)" v-if="hasBtnPermission('sys:role:delete', '删除角色', '删除', '移除')">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

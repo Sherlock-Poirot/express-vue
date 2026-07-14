@@ -86,9 +86,9 @@
       </div>
 
       <div class="btn-group">
-        <button class="btn primary" @click="handleAdd" v-if="hasBtnPermission('新增', '新增店铺')">新增</button>
-        <button class="btn danger" @click="handleBatchDelete" v-if="hasBtnPermission('批量删除', '删除')">批量删除</button>
-        <button class="btn warning" @click="handleImport" v-if="hasBtnPermission('导入', '导入Excel')">导入</button>
+        <button class="btn primary" @click="handleAdd" v-if="hasBtnPermission('system:shop:add', '新增店铺', '新增')">新增</button>
+        <button class="btn danger" @click="handleBatchDelete" v-if="hasBtnPermission('system:shop:delete', '批量删除', '删除')">批量删除</button>
+        <button class="btn warning" @click="handleImport" v-if="hasBtnPermission('system:shop:import', '导入', '导入Excel')">导入</button>
       </div>
     </div>
 
@@ -126,7 +126,7 @@
             <td>{{ item.empName }}</td>
             <td>{{ item.empType }}</td>
             <td>
-              <button class="btn edit" @click="handleEdit(item)" v-if="hasBtnPermission('编辑', '修改')">编辑</button>
+              <button class="btn edit" @click="handleEdit(item)" v-if="hasBtnPermission('system:shop:edit', '编辑店铺', '编辑', '修改')">编辑</button>
             </td>
           </tr>
         </tbody>

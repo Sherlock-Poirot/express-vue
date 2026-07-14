@@ -34,20 +34,20 @@
 
     <!-- 第二行：功能按钮 单独一行 -->
     <div class="action-toolbar">
-      <button class="search-btn" @click="openImport" v-if="hasBtnPermission('导入Excel')">导入Excel</button>
-      <button class="search-btn" @click="doClean" v-if="hasBtnPermission('数据清洗')">数据清洗</button>
-      <button class="search-btn" @click="doValidate" v-if="hasBtnPermission('数据校验')">数据校验</button>
-      <button class="search-btn" @click="doCalculate" v-if="hasBtnPermission('执行计算')">执行计算</button>
-      <button class="search-btn" @click="doGenerateSummary" v-if="hasBtnPermission('生成汇总账单')">
+      <button class="search-btn" @click="openImport" v-if="hasBtnPermission('settlement:bill:import', '导入Excel')">导入Excel</button>
+      <button class="search-btn" @click="doClean" v-if="hasBtnPermission('settlement:bill:clean', '数据清洗')">数据清洗</button>
+      <button class="search-btn" @click="doValidate" v-if="hasBtnPermission('settlement:bill:validate', '数据校验')">数据校验</button>
+      <button class="search-btn" @click="doCalculate" v-if="hasBtnPermission('settlement:bill:calculate', '执行计算')">执行计算</button>
+      <button class="search-btn" @click="doGenerateSummary" v-if="hasBtnPermission('settlement:bill:generateSummary', '生成汇总账单')">
         生成汇总账单
       </button>
-      <button class="search-btn" @click="doExportSummary" v-if="hasBtnPermission('汇总导出')">
+      <button class="search-btn" @click="doExportSummary" v-if="hasBtnPermission('settlement:bill:exportSummary', '汇总导出')">
         汇总导出
       </button>
-      <button class="search-btn" @click="doExportDetail" v-if="hasBtnPermission('明细导出')">
+      <button class="search-btn" @click="doExportDetail" v-if="hasBtnPermission('settlement:bill:exportDetail', '明细导出')">
         明细导出
       </button>
-      <button class="search-btn" @click="openDiffImport" v-if="hasBtnPermission('导入差异重量')">
+      <button class="search-btn" @click="openDiffImport" v-if="hasBtnPermission('settlement:bill:importDiff', '导入差异重量')">
         导入差异重量
       </button>
     </div>
