@@ -41,6 +41,7 @@
           <th>加收模式</th>
           <th>四区加收金额</th>
           <th>计算模式</th>
+          <th>修改时间</th>
           <th>备注</th>
           <th>操作</th>
         </tr>
@@ -68,6 +69,7 @@
           <td>{{ item.fourModel === "all" ? "全部加收" : "超出部分加收" }}</td>
           <td>{{ item.fourFee }} 元</td>
           <td>{{ item.type || "-" }}</td>
+          <td>{{ item.startTime || "-" }}</td>
 
           <!-- 备注：固定宽度 + 超出省略 + 悬浮显示全部 -->
           <td class="remark-ellipsis" 
