@@ -50,6 +50,7 @@
       <button class="search-btn" @click="openDiffImport" v-if="hasBtnPermission('settlement:bill:importDiff', '导入差异重量')">
         导入差异重量
       </button>
+      <button class="search-btn" @click="doArchive" v-if="hasBtnPermission('settlement:bill:archive', '归档')">归档</button>
     </div>
 
     <!-- TAB 切换：直营 / 业务员 / 承包区 -->
@@ -242,7 +243,7 @@ defineOptions({
 
 import { ref, reactive, onMounted, onUnmounted, inject, watch } from "vue";
 import axios from "axios";
-import { ElMessage, ElLoading } from "element-plus";
+import { ElMessage, ElLoading, ElMessageBox } from "element-plus";
 import { CircleCheck, Warning } from "@element-plus/icons-vue";
 import Pagination from "@/components/Pagination.vue";
 import { hasBtnPermission } from "@/utils/auth";
@@ -560,6 +561,48 @@ async function doValidate() {
 
 function closeValidate() {
   validateVisible.value = false;
+}
+
+async function doArchive() {
+  try {
+    const dateTip = query.billMonth ? `【${query.billMonth}】` : "【全部】";
+    await ElMessageBox.confirm(
+      `归档操作会将运单明细从原表迁移至归档表（迁移后清空原表），即将归档${dateTip}月份的数据，确认继续？`,
+      "归档确认",
+      {
+        confirmButtonText: "确认归档",
+        cancelButtonText: "取消",
+        type: "warning",
+        dangerouslyUseHTMLString: false,
+      }
+    );
+  } catch (e) {
+    return;
+  }
+  const loading = ElLoading.service({
+    lock: true,
+    text: "正在归档数据...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
+  try {
+    const params = {};
+    if (query.billMonth) {
+      params.date = query.billMonth;
+    }
+    const res = await axios.post("/api/waybill/archive", null, { params });
+    if (res.data.code === 200) {
+      const count = res.data.data ?? 0;
+      ElMessage.success(`归档成功，共归档 ${count} 条运单明细`);
+      await doSearch();
+    } else {
+      ElMessage.error(res.data.message || "归档失败");
+    }
+  } catch (err) {
+    console.error("归档失败", err);
+    ElMessage.error("归档失败，请稍后重试");
+  } finally {
+    loading.close();
+  }
 }
 
 async function doCalculate() {
