@@ -51,6 +51,7 @@
               </th>
               <th class="text-center">承包区</th>
               <th class="text-center">员工姓名</th>
+              <th class="text-center">员工类型</th>
               <th class="text-center">手机号码</th>
               <th class="text-center">入职日期</th>
               <th class="text-center">操作</th>
@@ -70,6 +71,9 @@
               </td>
               <td>
                 <strong>{{ item.realName }}</strong>
+              </td>
+              <td class="text-center">
+                {{ item.staffType === 1 ? "业务员" : (item.staffType === 0 ? "承包区" : "—") }}
               </td>
               <td>{{ item.phone || "—" }}</td>
               <td>{{ item.entryDate }}</td>
