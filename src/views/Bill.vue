@@ -51,6 +51,7 @@
         导入差异重量
       </button>
       <button class="search-btn" @click="doArchive" v-if="hasBtnPermission('settlement:bill:archive', '归档')">归档</button>
+      <button class="search-btn" @click="openVerify" v-if="hasBtnPermission('settlement:bill:verify', '账单验算')">账单验算</button>
     </div>
 
     <!-- TAB 切换：直营 / 业务员 / 承包区 -->
@@ -230,6 +231,180 @@
         </div>
         <div class="modal-footer">
           <button class="search-btn" @click="closeValidate">关闭</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 账单验算 弹窗 -->
+    <div class="modal" v-if="verifyVisible" @click.self="closeVerify">
+      <div class="modal-content verify-modal">
+        <div class="modal-header">
+          <h3>账单验算</h3>
+          <span class="close" @click="closeVerify">×</span>
+        </div>
+        <div class="verify-body">
+          <div class="verify-form-grid">
+            <div class="verify-form-item">
+              <label>客户编码</label>
+              <div class="verify-select-wrapper">
+                <input
+                  v-model="verifyForm.code"
+                  placeholder="请输入客户编码"
+                  @input="handleVerifyCustomerSearch('code')"
+                  @focus="handleVerifyCustomerSearch('code')"
+                  @blur="() => setTimeout(() => (showVerifyDropdown = false), 150)"
+                />
+                <div
+                  v-if="showVerifyDropdown && verifyActiveInput === 'code'"
+                  class="verify-dropdown"
+                  @mousedown.prevent
+                >
+                  <div
+                    v-for="(item, index) in visibleVerifyCustomerList"
+                    :key="index"
+                    class="verify-dropdown-item"
+                    @click="selectVerifyCustomer(item)"
+                  >
+                    {{ item.customerCode }} - {{ item.customerName }}
+                  </div>
+                  <div v-if="verifyHasMore" class="verify-load-more" @click="loadMoreVerifyCustomer">
+                    加载更多...
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="verify-form-item">
+              <label>客户名称</label>
+              <div class="verify-select-wrapper">
+                <input
+                  v-model="verifyForm.name"
+                  placeholder="请输入客户名称"
+                  @input="handleVerifyCustomerSearch('name')"
+                  @focus="handleVerifyCustomerSearch('name')"
+                  @blur="() => setTimeout(() => (showVerifyDropdown = false), 150)"
+                />
+                <div
+                  v-if="showVerifyDropdown && verifyActiveInput === 'name'"
+                  class="verify-dropdown"
+                  @mousedown.prevent
+                >
+                  <div
+                    v-for="(item, index) in visibleVerifyCustomerList"
+                    :key="index"
+                    class="verify-dropdown-item"
+                    @click="selectVerifyCustomer(item)"
+                  >
+                    {{ item.customerCode }} - {{ item.customerName }}
+                  </div>
+                  <div v-if="verifyHasMore" class="verify-load-more" @click="loadMoreVerifyCustomer">
+                    加载更多...
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="verify-form-item">
+              <label>扫描时间</label>
+              <div class="verify-picker-box">
+                <el-date-picker
+                  v-model="verifyForm.scanTime"
+                  type="date"
+                  placeholder="请选择扫描时间"
+                  value-format="YYYY-MM-DD"
+                />
+              </div>
+            </div>
+            <div class="verify-form-item">
+              <label>计费重量（kg）</label>
+              <input v-model="verifyForm.weight" type="number" placeholder="请输入计费重量" />
+            </div>
+            <div class="verify-form-item">
+              <label>计费省份</label>
+              <el-select
+                v-model="verifyForm.province"
+                placeholder="请选择计费省份"
+                filterable
+                clearable
+                class="verify-select-box"
+              >
+                <el-option
+                  v-for="item in provinceOptions"
+                  :key="item.dictValue"
+                  :label="item.dictLabel"
+                  :value="item.dictLabel"
+                />
+              </el-select>
+            </div>
+            <div class="verify-form-item">
+              <label>计费目的地名称</label>
+              <input v-model="verifyForm.destName" placeholder="请输入计费目的地名称" />
+            </div>
+            <div class="verify-form-item">
+              <label>加收</label>
+              <input v-model="verifyForm.officeExtra" type="number" placeholder="请输入加收金额" />
+            </div>
+            <div class="verify-form-item">
+              <label>账单显示费用</label>
+              <input v-model="verifyForm.expense" readonly placeholder="由验算接口回填" class="verify-readonly" />
+            </div>
+            <div class="verify-form-item">
+              <label>预付款</label>
+              <input v-model="verifyForm.preFee" readonly placeholder="由验算接口回填" class="verify-readonly" />
+            </div>
+            <div class="verify-form-item">
+              <label>快递费用</label>
+              <input v-model="verifyForm.realFee" readonly placeholder="由验算接口回填" class="verify-readonly" />
+            </div>
+            <div class="verify-form-item"></div>
+            <div class="verify-form-item verify-calc-cell">
+              <button class="search-btn verify-calc-btn" @click="doVerifyCalc">计算</button>
+            </div>
+          </div>
+
+          <!-- 价格表 -->
+          <div class="verify-price-box" v-if="verifyPriceGroups.length > 0">
+            <div class="verify-price-title">
+              {{ verifyForm.name || verifyForm.code }} - 价格表
+            </div>
+            <div v-for="(group, idx) in verifyPriceGroups" :key="idx" class="verify-price-group">
+              <table class="verify-table">
+                <thead>
+                  <tr>
+                    <th width="90">开始日期</th>
+                    <th width="90">结束日期</th>
+                    <th width="70">预付款</th>
+                    <th width="60">区域</th>
+                    <th width="70" v-for="w in group.weightHeaders" :key="w">{{ w }}</th>
+                    <th width="80">首重价格</th>
+                    <th width="80">续重价格</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(item, i) in group.items" :key="i">
+                    <td>{{ item.startTime }}</td>
+                    <td>{{ item.endTime }}</td>
+                    <td>{{ item.prepayment }}</td>
+                    <td>{{ item.area }}</td>
+                    <td v-for="w in group.weightHeaders" :key="w">{{ item.prices[w] || "-" }}</td>
+                    <td>{{ item.firstFee }}</td>
+                    <td>{{ item.overFee }}</td>
+                  </tr>
+                  <tr v-if="group.remark" class="verify-remark-row">
+                    <td :colspan="6 + group.weightHeaders.length">
+                      <img src="/logo.jpg" class="verify-remark-logo" alt="logo" />
+                      <strong>备注：</strong>{{ group.remark }}
+                    </td>
+                  </tr>
+                  <tr v-if="verifyAreaRemarks.length > 0" class="verify-area-remark-row">
+                    <td :colspan="6 + group.weightHeaders.length" class="verify-area-remark-td">
+                      <span v-for="area in verifyAreaRemarks" :key="area.areaNum" class="verify-area-item">
+                        {{ verifyAreaName(area.areaNum) }}：{{ area.areaCity }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -561,6 +736,224 @@ async function doValidate() {
 
 function closeValidate() {
   validateVisible.value = false;
+}
+
+// ==================== 账单验算 ====================
+const verifyVisible = ref(false);
+const verifyForm = reactive({
+  code: "",
+  name: "",
+  scanTime: "",
+  weight: "",
+  province: "",
+  destName: "",
+  officeExtra: "",
+  expense: "",
+  preFee: "",
+  realFee: "",
+});
+
+// 客户模糊匹配下拉（与店铺管理页面一致的模式）
+const verifyCustomerList = ref([]);
+const visibleVerifyCustomerList = ref([]);
+const showVerifyDropdown = ref(false);
+const verifyActiveInput = ref("");
+const verifyHasMore = ref(false);
+const VERIFY_PAGE_SIZE = 5;
+
+// 价格表数据
+const verifyPriceGroups = ref([]);
+const verifyAreaRemarks = ref([]);
+
+// 计费省份字典（dictCode: province_type）
+const provinceOptions = ref([]);
+let provinceDictLoaded = false;
+
+async function fetchProvinceOptions() {
+  if (provinceDictLoaded) return;
+  try {
+    const res = await axios.get("/api/dict/items/province_type");
+    if (res.data.code === 200) {
+      provinceOptions.value = res.data.data || [];
+      provinceDictLoaded = true;
+    }
+  } catch (e) {
+    console.error("获取计费省份字典失败", e);
+  }
+}
+
+function openVerify() {
+  verifyVisible.value = true;
+  fetchProvinceOptions();
+}
+
+function closeVerify() {
+  verifyVisible.value = false;
+}
+
+function resetVerifyCustomerList() {
+  verifyCustomerList.value = [];
+  visibleVerifyCustomerList.value = [];
+  verifyHasMore.value = false;
+  showVerifyDropdown.value = false;
+}
+
+// 输入搜索客户（互斥逻辑：填名称清编码，填编码清名称）
+async function handleVerifyCustomerSearch(type) {
+  verifyActiveInput.value = type;
+  if (type === "name") verifyForm.code = "";
+  if (type === "code") verifyForm.name = "";
+  // 客户变更后，旧价格表和计算结果失效，先清空
+  verifyPriceGroups.value = [];
+  verifyAreaRemarks.value = [];
+  verifyForm.expense = "";
+  verifyForm.preFee = "";
+  verifyForm.realFee = "";
+
+  const param = {};
+  if (type === "name") {
+    param.name = verifyForm.name;
+  } else {
+    param.code = verifyForm.code;
+  }
+  if (!param.name && !param.code) {
+    resetVerifyCustomerList();
+    return;
+  }
+  try {
+    const res = await axios.get("/api/shop/fuzzyMatch", { params: param });
+    const data = res.data.data || [];
+    verifyCustomerList.value = data;
+    visibleVerifyCustomerList.value = data.slice(0, VERIFY_PAGE_SIZE);
+    verifyHasMore.value = data.length > VERIFY_PAGE_SIZE;
+    showVerifyDropdown.value = true;
+  } catch (e) {}
+}
+
+function loadMoreVerifyCustomer() {
+  const next = visibleVerifyCustomerList.value.length + VERIFY_PAGE_SIZE;
+  visibleVerifyCustomerList.value = verifyCustomerList.value.slice(0, next);
+  verifyHasMore.value = verifyCustomerList.value.length > next;
+}
+
+// 选中客户后拉取价格表
+function selectVerifyCustomer(item) {
+  verifyForm.code = item.customerCode;
+  verifyForm.name = item.customerName;
+  showVerifyDropdown.value = false;
+  fetchVerifyPrice();
+}
+
+async function fetchVerifyPrice() {
+  if (!verifyForm.code) return;
+  try {
+    const res = await axios.get("/api/customer/price", {
+      params: { kCode: verifyForm.code },
+    });
+    if (res.data.code !== 200) {
+      ElMessage.error(res.data.message || "获取价格表失败");
+      return;
+    }
+    const data = res.data.data || {};
+    const priceList = data.priceList || data || [];
+    verifyAreaRemarks.value = priceList[0]?.areas || [];
+
+    const groupResult = [];
+    for (const parent of priceList) {
+      const { startTime, endTime, prepayment, detail, remark } = parent;
+      const weightSet = new Set();
+      const items = [];
+      for (const d of detail || []) {
+        const prices = {};
+        (d.fixedFee || []).forEach((f) => {
+          const key = f.weight + "kg";
+          prices[key] = f.fee;
+          weightSet.add(key);
+        });
+        items.push({
+          startTime,
+          endTime,
+          prepayment,
+          area: d.area,
+          firstFee: d.firstFee,
+          overFee: d.overFee,
+          prices,
+        });
+      }
+      groupResult.push({
+        weightHeaders: Array.from(weightSet).sort(
+          (a, b) => parseFloat(a) - parseFloat(b)
+        ),
+        items,
+        remark: remark || "",
+      });
+    }
+    verifyPriceGroups.value = groupResult;
+  } catch (e) {
+    console.error("获取价格表失败", e);
+  }
+}
+
+function verifyAreaName(num) {
+  const map = { 1: "一区", 2: "二区", 3: "三区", 4: "四区", 5: "五区" };
+  return map[num] || "其他";
+}
+
+// 验算：单条运单费用计算
+async function doVerifyCalc() {
+  if (!verifyForm.code || !verifyForm.name) {
+    ElMessage.warning("请先选择客户");
+    return;
+  }
+  if (!verifyForm.scanTime) {
+    ElMessage.warning("请选择扫描时间");
+    return;
+  }
+  if (verifyForm.weight === "" || verifyForm.weight === null) {
+    ElMessage.warning("请输入计费重量");
+    return;
+  }
+  if (!verifyForm.province) {
+    ElMessage.warning("请选择计费省份");
+    return;
+  }
+  if (!verifyForm.destName) {
+    ElMessage.warning("请输入计费目的地名称");
+    return;
+  }
+  const loading = ElLoading.service({
+    lock: true,
+    text: "正在计算...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
+  try {
+    const payload = {
+      scanDate: verifyForm.scanTime,
+      weight: Number(verifyForm.weight),
+      province: verifyForm.province,
+      destination: verifyForm.destName,
+      code: verifyForm.code,
+      name: verifyForm.name,
+      officeExtra: verifyForm.officeExtra === "" ? 0 : Number(verifyForm.officeExtra),
+      overFlag: false,
+      processed: false,
+    };
+    const res = await axios.post("/api/waybill/calculateSingle", payload);
+    if (res.data.code === 200) {
+      const data = res.data.data || {};
+      verifyForm.expense = data.expense ?? "";
+      verifyForm.preFee = data.preFee ?? "";
+      verifyForm.realFee = data.realFee ?? "";
+      ElMessage.success("计算完成");
+    } else {
+      ElMessage.error(res.data.message || "计算失败");
+    }
+  } catch (err) {
+    console.error("账单验算失败", err);
+    ElMessage.error(err?.response?.data?.message || "计算失败，请稍后重试");
+  } finally {
+    loading.close();
+  }
 }
 
 async function doArchive() {
@@ -1067,6 +1460,269 @@ td {
   border-bottom: 1px solid #ebeef5;
   text-align: center;
   font-size: 13px;
+}
+
+/* ==================== 账单验算弹窗 ==================== */
+.verify-modal {
+  max-width: 1200px;
+
+  @media (min-width: 1400px) {
+    max-width: 1400px;
+  }
+}
+
+.verify-body {
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.verify-form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px 16px;
+}
+
+.verify-form-item {
+  display: flex;
+  align-items: center;
+}
+
+.verify-form-item > label {
+  width: 110px;
+  flex-shrink: 0;
+  font-size: 14px;
+  color: #606266;
+  text-align: right;
+  margin-right: 10px;
+}
+
+/* 统一输入框样式：普通输入 / 客户模糊下拉输入 完全一致 */
+.verify-form-item > input,
+.verify-select-wrapper input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  box-sizing: border-box;
+  line-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+}
+
+.verify-form-item > input:focus,
+.verify-select-wrapper input:focus {
+  border-color: #1890ff;
+}
+
+.verify-form-item > input.verify-readonly {
+  background: #f5f7fa;
+  color: #f56c6c;
+  font-weight: 700;
+  cursor: not-allowed;
+}
+
+.verify-form-item > input.verify-readonly::placeholder {
+  color: #c0c4cc;
+  font-weight: 400;
+}
+
+.verify-select-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.verify-select-wrapper input {
+  width: 100%;
+}
+
+.verify-picker-box {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 计费省份下拉，与其他输入框同宽同高 */
+.verify-select-box {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+.verify-select-box :deep(.el-select__wrapper) {
+  min-height: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.verify-picker-box :deep(.el-date-editor) {
+  width: 100%;
+  height: 32px;
+}
+
+.verify-picker-box :deep(.el-date-editor .el-input__wrapper) {
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border-radius: 4px;
+}
+
+.verify-picker-box :deep(.el-date-editor .el-input__inner) {
+  height: 30px;
+  line-height: 30px;
+  font-size: 13px;
+}
+
+.verify-calc-cell {
+  justify-content: flex-end;
+}
+
+.verify-calc-btn {
+  height: 32px;
+  padding: 0 22px;
+  box-sizing: border-box;
+}
+
+.verify-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.verify-dropdown-item {
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.verify-dropdown-item:hover {
+  background: #f5f7fa;
+  color: #1890ff;
+}
+
+.verify-load-more {
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #1890ff;
+  cursor: pointer;
+  border-top: 1px solid #ebeef5;
+}
+
+.verify-price-box {
+  margin-top: 22px;
+  border-top: 1px dashed #dcdfe6;
+  padding-top: 16px;
+}
+
+.verify-price-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #303133;
+}
+
+.verify-price-group {
+  margin-bottom: 8px;
+
+  @media (min-width: 1400px) {
+    margin-bottom: 10px;
+  }
+}
+
+.verify-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.verify-table th,
+.verify-table td {
+  text-align: center;
+  padding: 8px 6px;
+  border: 1px solid #ebeef5;
+  font-size: 12px;
+
+  @media (min-width: 1400px) {
+    padding: 10px 8px;
+    font-size: 14px;
+  }
+}
+
+.verify-table th {
+  background: #f5f7fa;
+  font-weight: 600;
+}
+
+.verify-table tr:hover {
+  background: #fafafa;
+}
+
+/* 备注行（与价格管理详情一致） */
+.verify-remark-row {
+  background-color: #f9fafb;
+}
+
+.verify-remark-row td {
+  text-align: left !important;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #333;
+  border-top: 1px solid #ebeef5;
+
+  @media (min-width: 1400px) {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+}
+
+.verify-remark-row strong {
+  color: #1890ff;
+  margin-right: 8px;
+}
+
+.verify-remark-logo {
+  width: 80px;
+  height: auto;
+  opacity: 0.25;
+  vertical-align: middle;
+  margin-right: 8px;
+
+  @media (min-width: 1400px) {
+    width: 100px;
+    margin-right: 10px;
+  }
+}
+
+/* 区域备注行（与价格管理详情一致） */
+.verify-area-remark-row td {
+  background: #f9f9f9;
+  text-align: left !important;
+  padding: 6px 12px;
+  border-top: 1px dashed #eee;
+}
+
+.verify-area-remark-td {
+  font-size: 12px !important;
+  color: #666 !important;
+  line-height: 1.5;
+}
+
+.verify-area-item {
+  display: block;
+  margin-bottom: 2px;
 }
 
 .error-table tr:hover {
