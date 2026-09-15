@@ -88,6 +88,12 @@ const routes = [
         component: () => import("../views/Staff.vue"),
         meta: { title: "员工管理" },
       },
+      {
+        path: "download/list",
+        name: "DownloadManage",
+        component: () => import("../views/DownloadManage.vue"),
+        meta: { title: "下载管理" },
+      },
       
       {
         path: "report/profit",

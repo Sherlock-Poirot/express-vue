@@ -1102,38 +1102,22 @@ async function doExportDetail() {
   }
   const loading = ElLoading.service({
     lock: true,
-    text: "正在导出明细...",
+    text: "正在提交导出任务...",
     background: "rgba(0, 0, 0, 0.7)",
   });
   try {
-    const response = await axios.get("/api/monthlyBill/exportDetail", {
+    // 异步导出：提交任务后由后台生成文件，到下载管理页面下载
+    const res = await axios.post("/api/monthlyBill/exportDetail/async", null, {
       params: { billMonth: query.billMonth },
-      responseType: "blob",
     });
-    
-    if (response.data.type === 'application/json') {
-      const text = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsText(response.data);
-      });
-      const errorData = JSON.parse(text);
-      ElMessage.error(errorData.message || "导出失败");
-      return;
+    if (res.data.code === 200) {
+      ElMessage.success("导出任务已提交，文件生成完成后请到【下载管理】页面下载");
+    } else {
+      ElMessage.error(res.data.message || "导出任务提交失败");
     }
-    
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `${query.billMonth}_明细.zip`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-    ElMessage.success("明细导出成功");
   } catch (err) {
-    console.error("明细导出失败", err);
-    ElMessage.error("明细导出失败，请稍后重试");
+    console.error("明细导出任务提交失败", err);
+    ElMessage.error(err?.response?.data?.message || "导出任务提交失败，请稍后重试");
   } finally {
     loading.close();
   }

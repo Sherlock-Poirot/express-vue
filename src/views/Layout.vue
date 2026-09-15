@@ -250,6 +250,7 @@ const getComponentName = (path) => {
     '/settlement/shop': 'Shop',
     '/settlement/bill': 'Bill',
     '/settlement/employee': 'Staff',
+    '/download/list': 'DownloadManage',
     '/system/user': 'UserManage',
     '/system/role': 'RoleManage',
     '/system/menu': 'Menu',
