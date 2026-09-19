@@ -34,10 +34,6 @@
 
     <!-- 第二行：功能按钮 单独一行 -->
     <div class="action-toolbar">
-      <button class="search-btn" @click="openImport" v-if="hasBtnPermission('settlement:bill:import', '导入Excel')">导入Excel</button>
-      <button class="search-btn" @click="doClean" v-if="hasBtnPermission('settlement:bill:clean', '数据清洗')">数据清洗</button>
-      <button class="search-btn" @click="doValidate" v-if="hasBtnPermission('settlement:bill:validate', '数据校验')">数据校验</button>
-      <button class="search-btn" @click="doCalculate" v-if="hasBtnPermission('settlement:bill:calculate', '执行计算')">执行计算</button>
       <button class="search-btn" @click="doGenerateSummary" v-if="hasBtnPermission('settlement:bill:generateSummary', '生成汇总账单')">
         生成汇总账单
       </button>
@@ -46,9 +42,6 @@
       </button>
       <button class="search-btn" @click="doExportDetail" v-if="hasBtnPermission('settlement:bill:exportDetail', '明细导出')">
         明细导出
-      </button>
-      <button class="search-btn" @click="openDiffImport" v-if="hasBtnPermission('settlement:bill:importDiff', '导入差异重量')">
-        导入差异重量
       </button>
       <button class="search-btn" @click="doArchive" v-if="hasBtnPermission('settlement:bill:archive', '归档')">归档</button>
       <button class="search-btn" @click="openVerify" v-if="hasBtnPermission('settlement:bill:verify', '账单验算')">账单验算</button>
@@ -149,7 +142,7 @@
     />
 
     <!-- 导入Excel 弹窗 -->
-    <div class="modal" v-if="importVisible" @click.self="closeImport">
+    <div class="modal above-flow" v-if="importVisible" @click.self="closeImport">
       <div class="modal-content">
         <div class="modal-header">
           <h3>导入Excel账单</h3>
@@ -171,7 +164,7 @@
     </div>
 
     <!-- 导入差异重量 弹窗 -->
-    <div class="modal" v-if="diffImportVisible" @click.self="closeDiffImport">
+    <div class="modal above-flow" v-if="diffImportVisible" @click.self="closeDiffImport">
       <div class="modal-content">
         <div class="modal-header">
           <h3>导入差异重量数据</h3>
@@ -418,18 +411,20 @@
           <span class="close" @click="closeFlow">×</span>
         </div>
         <div class="flow-body">
-          <!-- 月份切换（联动：优先取列表当前选中的账单月份） -->
+          <!-- 月份选择（联动：默认取列表当前选中的账单月份） -->
           <div class="flow-toolbar">
-            <el-select
+            <el-date-picker
               v-model="flowMonth"
+              type="month"
               placeholder="选择账单月份"
-              filterable
+              value-format="YYYY-MM"
+              :clearable="false"
               class="flow-month-select"
-              @change="fetchFlowDetail"
-            >
-              <el-option v-for="m in flowMonths" :key="m" :label="m" :value="m" />
-            </el-select>
-            <button class="search-btn" @click="fetchFlowDetail">刷新</button>
+              style="width: 200px"
+              @change="fetchFlowList"
+            />
+            <button class="search-btn" @click="fetchFlowList">刷新</button>
+            <button class="search-btn flow-reset-btn" v-if="flowBatch" @click="doResetFlow">重置</button>
             <span class="flow-current-tip" v-if="flowBatch">
               当前进度：{{ flowStepName(flowBatch.currentStepCode) }}
             </span>
@@ -657,14 +652,10 @@ function handlePageChange({ pageNo, pageSize }) {
   getList();
 }
 
-// 导入目标月份：工具栏打开取列表选中月份，流程图打开取流程图当前月份
+// 导入目标月份：由流程图打开，取流程图当前月份
 const importMonthTarget = ref("");
 const diffMonthTarget = ref("");
 
-function openImport() {
-  importMonthTarget.value = query.billMonth || "";
-  importVisible.value = true;
-}
 function closeImport() {
   importVisible.value = false;
 }
@@ -696,16 +687,13 @@ async function submitImport() {
 
     const taskNo = res.data.data;
     ElMessage.success("上传成功，后台正在导入...");
+    // 流程图弹窗打开时立即刷新，让 IMPORT 步骤马上进入"执行中"
+    if (flowVisible.value) fetchFlowDetail();
     startPollTask(taskNo);
   } catch (err) {
     ElMessage.error("上传失败：" + (err.message || err));
     importing.value = false;
   }
-}
-
-function openDiffImport() {
-  diffMonthTarget.value = query.billMonth || "";
-  diffImportVisible.value = true;
 }
 
 function closeDiffImport() {
@@ -737,6 +725,8 @@ async function submitDiffImport() {
     if (res.data.code === 200) {
       const taskNo = res.data.data;
       ElMessage.success("上传成功，后台正在导入差异重量数据...");
+      // 流程图弹窗打开时立即刷新，让 IMPORT_DIFF 步骤马上进入"执行中"
+      if (flowVisible.value) fetchFlowDetail();
       startPollTask(taskNo);
     } else {
       ElMessage.error(res.data.message || "上传失败");
@@ -820,63 +810,6 @@ onUnmounted(() => {
   stopFlowPoll();
 });
 
-async function doClean() {
-  if (!query.billMonth) {
-    ElMessage.warning("请先选择账单月份");
-    return;
-  }
-  const loading = ElLoading.service({
-    lock: true,
-    text: "正在提交清洗任务...",
-    background: "rgba(0, 0, 0, 0.7)",
-  });
-  try {
-    const res = await axios.post("/api/waybill/clean", null, {
-      params: { billMonth: query.billMonth },
-    });
-    if (res.data.code === 200) {
-      ElMessage.success(res.data.message || "清洗任务已提交，正在异步执行");
-    } else {
-      ElMessage.error(res.data.message || "数据清洗失败");
-    }
-  } catch (err) {
-    console.error("数据清洗失败", err);
-    ElMessage.error(err?.response?.data?.message || "数据清洗失败，请稍后重试");
-  } finally {
-    loading.close();
-  }
-}
-
-async function doValidate() {
-  if (!query.billMonth) {
-    ElMessage.warning("请先选择账单月份");
-    return;
-  }
-  const loading = ElLoading.service({
-    lock: true,
-    text: "正在校验数据...",
-    background: "rgba(0, 0, 0, 0.7)",
-  });
-  try {
-    const res = await axios.post("/api/waybill/validate", null, {
-      params: { billMonth: query.billMonth },
-    });
-    if (res.data.code === 200) {
-      const data = res.data.data;
-      validateResult.valid = data.valid;
-      validateResult.errors = data.errors || [];
-      validateVisible.value = true;
-    } else {
-      ElMessage.error(res.data.message || "数据校验失败");
-    }
-  } catch (err) {
-    console.error("数据校验失败", err);
-    ElMessage.error("数据校验失败，请稍后重试");
-  } finally {
-    loading.close();
-  }
-}
-
 function closeValidate() {
   validateVisible.value = false;
 }
@@ -936,7 +869,6 @@ function closeVerify() {
 
 // ==================== 账单工作流流程图 ====================
 const flowVisible = ref(false);
-const flowMonths = ref([]);
 const flowMonth = ref("");
 const flowBatch = ref(null);
 const flowLoading = ref(false);
@@ -960,20 +892,23 @@ const flowImportFiles = computed(() => {
 // 已完成的步骤状态集合（用于箭头高亮）
 const FLOW_DONE_STATUSES = ["SUCCESS", "PASSED", "SKIPPED"];
 
-// 是否显示"人工确认通过"按钮：IMPORT/VALIDATE 步骤执行成功后待人工确认
+// 最后一个步骤（计算账单）不支持人工确认/跳过
+const LAST_STEP_CODE = "CALCULATE";
+
+// 是否显示"人工确认通过"按钮：非最后步骤，待执行（人工直接标记完成）/已完成（确认执行结果）状态
 const flowShowConfirm = computed(() => {
   const s = flowActiveStepObj.value;
   return (
     !!s &&
-    (s.stepCode === "IMPORT" || s.stepCode === "VALIDATE") &&
-    s.status === "SUCCESS"
+    s.stepCode !== LAST_STEP_CODE &&
+    ["WAITING", "SUCCESS"].includes(s.status)
   );
 });
 
-// 是否显示"跳过此步骤"按钮：仅 IMPORT_DIFF 且处于待执行状态
+// 是否显示"跳过此步骤"按钮：非最后步骤，且处于待执行状态
 const flowShowSkip = computed(() => {
   const s = flowActiveStepObj.value;
-  return !!s && s.stepCode === "IMPORT_DIFF" && s.status === "WAITING";
+  return !!s && s.stepCode !== LAST_STEP_CODE && s.status === "WAITING";
 });
 
 // ==================== 流程图节点操作按钮显隐 ====================
@@ -1053,56 +988,103 @@ function flowFormatTime(time) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-// 打开流程图弹窗（联动：优先展示账单列表当前选中的月份）
-async function openFlow() {
+// 打开流程图弹窗（联动：默认定位账单列表当前选中的月份）
+function openFlow() {
   flowVisible.value = true;
   flowActiveStep.value = "";
   flowBatch.value = null;
-  flowMonths.value = [];
-  try {
-    const res = await axios.get("/api/waybill/flow/list");
-    if (res.data.code === 200) {
-      const batches = res.data.data || [];
-      flowMonths.value = batches.map((b) => b.billMonth);
-      if (flowMonths.value.includes(query.billMonth)) {
-        flowMonth.value = query.billMonth;
-      } else {
-        flowMonth.value = flowMonths.value[0] || "";
-      }
-      if (flowMonth.value) {
-        fetchFlowDetail();
-      }
-    } else {
-      ElMessage.error(res.data.message || "获取工作流批次列表失败");
-    }
-  } catch (err) {
-    console.error("获取工作流批次列表失败", err);
-    ElMessage.error("获取工作流批次列表失败，请稍后重试");
+  flowMonth.value = query.billMonth || "";
+  if (flowMonth.value) {
+    fetchFlowList();
   }
 }
 
+// 按月份筛选批次（/flow/list?billMonth=yyyy-MM），存在批次再拉取详情渲染流水线
+async function fetchFlowList() {
+  if (!flowMonth.value) {
+    flowBatch.value = null;
+    return;
+  }
+  try {
+    const res = await axios.get("/api/waybill/flow/list", {
+      params: { billMonth: flowMonth.value },
+    });
+    if (res.data.code === 200) {
+      const batches = res.data.data || [];
+      if (batches.length === 0) {
+        // 该月份无工作流批次
+        flowBatch.value = null;
+        return;
+      }
+      fetchFlowDetail();
+    } else {
+      ElMessage.error(res.data.message || "获取工作流批次失败");
+    }
+  } catch (err) {
+    // 错误提示由 axios 拦截器统一弹出（含后端业务异常信息），此处不再重复弹
+    console.error("获取工作流批次失败", err);
+  }
+}
+
+// 从批次中挑选默认选中的节点：取第一个"未终态"的步骤（非人工确认通过/已跳过），
+// 即当前应处理的卡片。注意：仅 SUCCESS（执行完待人工确认）时也停留该步骤——
+// 例如导入原始账单可能分多个文件陆续上传，需人工确认后才自动跳到下一步。
+// 全部为终态 → 选中最后一步。
+function pickFlowActiveStep(batch) {
+  const steps = batch.steps || [];
+  if (!steps.length) return "";
+  const RESOLVED = ["PASSED", "SKIPPED"];
+  const current = steps.find((s) => !RESOLVED.includes(s.status));
+  return current ? current.stepCode : steps[steps.length - 1].stepCode;
+}
+
 // 获取指定月份的批次详情（5步骤状态 + 导入文件清单）
-async function fetchFlowDetail() {
+// keepSelection=true 时保留用户当前选中的节点（仅轮询刷新使用）
+async function fetchFlowDetail(keepSelection = false) {
   if (!flowMonth.value) return;
   flowLoading.value = true;
   try {
+    // 记录刷新前各步骤状态，用于检测"新失败"的步骤
+    const prevStatus = {};
+    if (flowBatch.value) {
+      (flowBatch.value.steps || []).forEach((s) => {
+        prevStatus[s.stepCode] = s.status;
+      });
+    }
     const res = await axios.get(`/api/waybill/flow/${flowMonth.value}`);
     if (res.data.code === 200) {
       flowBatch.value = res.data.data;
       if (flowBatch.value) {
-        // 默认选中当前进行中的步骤
-        flowActiveStep.value =
-          flowBatch.value.currentStepCode ||
-          (flowBatch.value.steps[0] && flowBatch.value.steps[0].stepCode) ||
-          "";
+        const selected = flowBatch.value.steps.find(
+          (s) => s.stepCode === flowActiveStep.value
+        );
+        // 非轮询场景（打开弹窗/执行操作后）自动定位当前应处理的步骤；
+        // 轮询时若选中的步骤已进入人工终态（被确认/跳过），同样自动跳到下一张卡
+        if (
+          !keepSelection ||
+          !flowActiveStep.value ||
+          (selected && ["PASSED", "SKIPPED"].includes(selected.status))
+        ) {
+          flowActiveStep.value = pickFlowActiveStep(flowBatch.value);
+        }
         startFlowPollIfNeeded();
+        // 新检测到执行失败的步骤 → 主动弹出后端返回的错误信息
+        (flowBatch.value.steps || []).forEach((s) => {
+          if (
+            s.status === "FAILED" &&
+            prevStatus[s.stepCode] !== "FAILED" &&
+            s.errorMsg
+          ) {
+            ElMessage.error(`${s.stepName}失败：${s.errorMsg}`);
+          }
+        });
       }
     } else {
       ElMessage.error(res.data.message || "获取工作流详情失败");
     }
   } catch (err) {
+    // 错误提示由 axios 拦截器统一弹出（含后端业务异常信息），此处不再重复弹
     console.error("获取工作流详情失败", err);
-    ElMessage.error("获取工作流详情失败，请稍后重试");
   } finally {
     flowLoading.value = false;
   }
@@ -1114,7 +1096,8 @@ function startFlowPollIfNeeded() {
     flowBatch.value && (flowBatch.value.steps || []).some((s) => s.status === "RUNNING");
   if (hasRunning) {
     if (!flowPollTimer) {
-      flowPollTimer = setInterval(fetchFlowDetail, 5000);
+      // 轮询刷新保留用户手动选中的节点，不重置
+      flowPollTimer = setInterval(() => fetchFlowDetail(true), 5000);
     }
   } else {
     stopFlowPoll();
@@ -1134,14 +1117,14 @@ function closeFlow() {
   stopFlowPoll();
 }
 
-// 人工确认步骤完成（IMPORT：确认文件已导齐 / VALIDATE：确认核查通过）
+// 人工确认步骤完成（待执行=人工标记完成不执行 / 已完成=人工核查执行结果），最后一步除外
 async function doConfirmStep() {
   const s = flowActiveStepObj.value;
   if (!s || !flowMonth.value) return;
   const tip =
-    s.stepCode === "IMPORT"
-      ? "确认原始账单文件已全部导入完成？确认后将进入下一步骤。"
-      : "确认校验结果已人工核查通过？确认后将进入计算步骤。";
+    s.status === "WAITING"
+      ? `确认将「${s.stepName}」人工标记为完成？确认后将跳过实际执行，直接进入下一步骤。`
+      : `确认「${s.stepName}」执行结果已人工核查通过？确认后将进入下一步骤。`;
   try {
     await ElMessageBox.confirm(tip, "人工确认", {
       confirmButtonText: "确认通过",
@@ -1168,7 +1151,7 @@ async function doConfirmStep() {
     }
   } catch (err) {
     console.error("人工确认失败", err);
-    ElMessage.error(err?.response?.data?.message || "确认失败，请稍后重试");
+    // 后端业务异常信息由 axios 拦截器统一弹出，这里不再重复提示
   } finally {
     loading.close();
   }
@@ -1180,7 +1163,7 @@ async function doSkipStep() {
   if (!s || !flowMonth.value) return;
   try {
     await ElMessageBox.confirm(
-      "确认跳过「导入重量差异数据」步骤？无差异数据时可直接跳过。",
+      `确认跳过「${s.stepName}」步骤？跳过后将直接进入下一步骤。`,
       "跳过步骤",
       {
         confirmButtonText: "确认跳过",
@@ -1208,7 +1191,44 @@ async function doSkipStep() {
     }
   } catch (err) {
     console.error("跳过步骤失败", err);
-    ElMessage.error(err?.response?.data?.message || "跳过失败，请稍后重试");
+    // 后端业务异常信息由 axios 拦截器统一弹出，这里不再重复提示
+  } finally {
+    loading.close();
+  }
+}
+
+// 重置整个工作流批次（所有步骤状态清空回到初始状态）
+async function doResetFlow() {
+  if (!flowMonth.value) return;
+  try {
+    await ElMessageBox.confirm(
+      `确认重置 ${flowMonth.value} 的整个工作流？重置后所有步骤状态将清空并回到初始状态，该操作不可恢复！`,
+      "重置工作流",
+      {
+        confirmButtonText: "确认重置",
+        cancelButtonText: "取消",
+        type: "error",
+      }
+    );
+  } catch {
+    return;
+  }
+  const loading = ElLoading.service({
+    lock: true,
+    text: "正在重置工作流...",
+    background: "rgba(0, 0, 0, 0.7)",
+  });
+  try {
+    const res = await axios.post(`/api/waybill/flow/${flowMonth.value}/reset`);
+    if (res.data.code === 200) {
+      ElMessage.success(res.data.data || "重置成功");
+      fetchFlowDetail();
+    } else {
+      ElMessage.error(res.data.message || "重置失败");
+    }
+  } catch (err) {
+    // 后端业务异常信息由 axios 拦截器统一弹出，这里不再重复提示
+    console.error("重置工作流失败", err);
   } finally {
     loading.close();
   }
@@ -1257,7 +1277,7 @@ async function flowRunClean() {
     }
   } catch (err) {
     console.error("数据清洗失败", err);
-    ElMessage.error(err?.response?.data?.message || "数据清洗失败，请稍后重试");
+    // 后端业务异常信息由 axios 拦截器统一弹出，这里不再重复提示
   } finally {
     loading.close();
   }
@@ -1286,7 +1306,7 @@ async function flowRunValidate() {
     }
   } catch (err) {
     console.error("数据校验失败", err);
-    ElMessage.error(err?.response?.data?.message || "数据校验失败，请稍后重试");
+    // 后端业务异常信息由 axios 拦截器统一弹出，这里不再重复提示
   } finally {
     loading.close();
   }
@@ -1321,7 +1341,7 @@ async function flowRunCalculate() {
     }
   } catch (err) {
     console.error("计算失败", err);
-    ElMessage.error(err?.response?.data?.message || "计算失败，请稍后重试");
+    // 后端业务异常信息由 axios 拦截器统一弹出，这里不再重复提示
   } finally {
     loading.close();
   }
@@ -1486,7 +1506,7 @@ async function doVerifyCalc() {
     }
   } catch (err) {
     console.error("账单验算失败", err);
-    ElMessage.error(err?.response?.data?.message || "计算失败，请稍后重试");
+    // 后端业务异常信息由 axios 拦截器统一弹出，这里不再重复提示
   } finally {
     loading.close();
   }
@@ -1529,33 +1549,6 @@ async function doArchive() {
   } catch (err) {
     console.error("归档失败", err);
     ElMessage.error("归档失败，请稍后重试");
-  } finally {
-    loading.close();
-  }
-}
-
-async function doCalculate() {
-  if (!query.billMonth) {
-    ElMessage.warning("请先选择账单月份");
-    return;
-  }
-  const loading = ElLoading.service({
-    lock: true,
-    text: "正在提交计算任务...",
-    background: "rgba(0, 0, 0, 0.7)",
-  });
-  try {
-    const res = await axios.post("/api/waybill/calculate", null, {
-      params: { billMonth: query.billMonth },
-    });
-    if (res.data.code === 200) {
-      ElMessage.success(res.data.message || "计算任务已提交，正在异步执行");
-    } else {
-      ElMessage.error(res.data.message || "计算失败");
-    }
-  } catch (err) {
-    console.error("计算失败", err);
-    ElMessage.error(err?.response?.data?.message || "计算失败，请稍后重试");
   } finally {
     loading.close();
   }
@@ -2266,6 +2259,11 @@ td {
   z-index: 2100;
 }
 
+/* 导入/差异导入弹窗同理，从流程图内打开时置顶 */
+.above-flow {
+  z-index: 2100;
+}
+
 /* ==================== 账单工作流流程图 ==================== */
 .flow-modal {
   max-width: 1200px;
@@ -2464,6 +2462,11 @@ td {
 
 .flow-skip-btn {
   background: #909399;
+}
+
+/* 重置按钮：危险操作警示色 */
+.flow-reset-btn {
+  background: #f56c6c;
 }
 
 .flow-detail-row {

@@ -7,7 +7,7 @@ import "./assets/css/global.css";
 import { getToken, clearAuth } from "./utils/auth";
 
 // 🔥 在这里加入 Element Plus
-import ElementPlus from "element-plus";
+import ElementPlus, { ElMessage } from "element-plus";
 import "element-plus/dist/index.css";
 import zhCn from "element-plus/dist/locale/zh-cn.mjs";
 
@@ -37,7 +37,7 @@ axios.interceptors.response.use(
       return res;
     }
     if (res.data.code !== 200) {
-      $msg.error(res.data.message || "操作失败");
+      ElMessage.error(res.data.message || "操作失败");
       return Promise.reject(res.data.message);
     }
     return res;
@@ -55,7 +55,7 @@ axios.interceptors.response.use(
       }
     }
     const msg = err?.response?.data?.message || err.message || "服务异常";
-    $msg.error(msg);
+    ElMessage.error(msg);
     return Promise.reject(msg);
   },
 );
