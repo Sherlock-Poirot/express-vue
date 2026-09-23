@@ -89,6 +89,12 @@ const routes = [
         meta: { title: "员工管理" },
       },
       {
+        path: "settlement/supportFeeConfig",
+        name: "SupportFeeConfig",
+        component: () => import("../views/SupportFeeConfig.vue"),
+        meta: { title: "扶持派费配置" },
+      },
+      {
         path: "download/list",
         name: "DownloadManage",
         component: () => import("../views/DownloadManage.vue"),
