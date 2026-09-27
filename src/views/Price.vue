@@ -25,6 +25,9 @@
 
       <!-- 👇 批量删除 -->
       <button @click="handleBatchDelete" class="delete-btn" v-if="hasBtnPermission('批量删除', '删除')">批量删除</button>
+
+      <!-- 👇 导出所有客户价格表 -->
+      <button @click="doExportAllPrice" class="search-btn" v-if="hasBtnPermission('settlement:price:exportAll', '导出')">导出</button>
     </div>
 
     <table>
@@ -669,6 +672,44 @@ async function handleBatchDelete() {
     console.error(e);
     const msg = e?.response?.data?.message || e.message || "删除失败";
     proxy.$msg(msg);
+  }
+}
+
+// 导出所有客户价格表（每个客户一个sheet页）
+async function doExportAllPrice() {
+  try {
+    const response = await axios.get("/api/customer/exportAllPrice", {
+      responseType: "blob",
+    });
+
+    // blob 里夹 JSON 说明后端业务异常
+    if (response.data.type === "application/json") {
+      const text = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsText(response.data);
+      });
+      const errorData = JSON.parse(text);
+      proxy.$msg(errorData.message || "导出失败");
+      return;
+    }
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    // 优先使用后端 Content-Disposition 里的文件名（带时间戳），取不到再用默认值
+    const disposition = response.headers["content-disposition"] || "";
+    const match = disposition.match(/filename\*=UTF-8''([^;]+)/);
+    const fileName = match ? decodeURIComponent(match[1]) : "所有客户价格表.xlsx";
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    proxy.$msg("导出成功");
+  } catch (e) {
+    console.error("导出失败", e);
+    proxy.$msg(e?.message || "导出失败，请稍后重试");
   }
 }
 
