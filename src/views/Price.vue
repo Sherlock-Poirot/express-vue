@@ -28,6 +28,9 @@
 
       <!-- 👇 导出所有客户价格表 -->
       <button @click="doExportAllPrice" class="search-btn" v-if="hasBtnPermission('settlement:price:exportAll', '导出')">导出</button>
+
+      <!-- 👇 批量修改价格 -->
+      <button @click="openBatchAdjustModal" class="search-btn" v-if="hasBtnPermission('settlement:price:batchAdjust', '批量修改价格')">批量修改价格</button>
     </div>
 
     <table>
@@ -569,6 +572,144 @@
         </div>
       </div>
     </div>
+
+    <!-- 👇 ==================== 批量修改价格弹窗 ==================== -->
+    <div class="modal" v-if="batchAdjustVisible" @click.self="closeBatchAdjustModal">
+      <div class="modal-content" style="max-width: 1300px">
+        <div class="modal-header">
+          <h3>批量修改价格</h3>
+          <span class="close-btn" @click="closeBatchAdjustModal">×</span>
+        </div>
+
+        <div class="adjust-transfer">
+          <!-- 左侧：候选客户（支持筛选、全选、批量勾选） -->
+          <div class="adjust-panel left">
+            <div class="adjust-panel-title">
+              <label class="adjust-check-all">
+                <input
+                  type="checkbox"
+                  :checked="isAllLeftChecked"
+                  :indeterminate="isLeftIndeterminate"
+                  @change="toggleLeftAll"
+                />
+                全选
+              </label>
+              <span class="adjust-count">{{ filteredCandidates.length }}</span>
+            </div>
+            <input
+              v-model="batchAdjustSearchName"
+              class="adjust-search"
+              placeholder="输入客户名称筛选"
+            />
+            <div class="adjust-list">
+              <label v-for="c in filteredCandidates" :key="c.customerCode" class="adjust-item">
+                <input
+                  type="checkbox"
+                  :checked="leftChecked.includes(c.customerCode)"
+                  @change="toggleLeftItem(c.customerCode)"
+                />
+                <span class="adjust-code">{{ c.customerCode }}</span>
+                <span class="adjust-name">{{ c.customerName }}</span>
+              </label>
+              <div v-if="filteredCandidates.length === 0" class="adjust-empty">暂无可选客户</div>
+            </div>
+          </div>
+
+          <!-- 中间：批量移动箭头 -->
+          <div class="adjust-middle">
+            <button class="search-btn adjust-arrow" :disabled="leftChecked.length === 0" @click="moveToRight">
+              添加 &gt;
+            </button>
+            <button class="delete-btn adjust-arrow" :disabled="rightChecked.length === 0" @click="moveToLeft">
+              &lt; 移除
+            </button>
+          </div>
+
+          <!-- 右侧：已选客户调价明细 -->
+          <div class="adjust-panel right">
+            <div class="adjust-panel-title">
+              <span>已选客户</span>
+              <label class="adjust-check-all">
+                <input
+                  type="checkbox"
+                  :checked="isAllRightChecked"
+                  :indeterminate="isRightIndeterminate"
+                  @change="toggleRightAll"
+                />
+                全选
+              </label>
+              <span class="adjust-count">{{ batchAdjustRows.length }}</span>
+            </div>
+            <!-- 统一设置行：填写后自动同步到下方所有客户，行内仍可单独修改 -->
+            <div class="adjust-preset">
+              <label>预付款修改金额
+                <input v-model.number="batchPreset.prepayDelta" type="number" step="0.01" placeholder="正涨负降" class="adjust-input" style="width: 92px" @change="syncPreset('prepayDelta')" />
+              </label>
+              <label>修改金额
+                <input v-model.number="batchPreset.priceDelta" type="number" step="0.01" placeholder="正涨负降" class="adjust-input" style="width: 86px" @change="syncPreset('priceDelta')" />
+              </label>
+              <label>开始时间
+                <el-date-picker v-model="batchPreset.startTime" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 130px" :clearable="false" @change="syncPreset('startTime')" />
+              </label>
+              <label>五区修改
+                <el-switch v-model="batchPreset.fiveAreaFlag" @change="syncPreset('fiveAreaFlag')" />
+              </label>
+            </div>
+            <div class="adjust-list">
+              <table class="adjust-table" v-if="batchAdjustRows.length > 0">
+                <thead>
+                  <tr>
+                    <th style="width: 32px"></th>
+                    <th style="width: 76px">客户编码</th>
+                    <th>客户名称</th>
+                    <th style="width: 112px">预付款修改金额</th>
+                    <th style="width: 96px">修改金额</th>
+                    <th style="width: 142px">开始时间</th>
+                    <th style="width: 64px">五区修改</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="row in batchAdjustRows" :key="row.customerCode">
+                    <td style="text-align: center">
+                      <input
+                        type="checkbox"
+                        :checked="rightChecked.includes(row.customerCode)"
+                        @change="toggleRightItem(row.customerCode)"
+                      />
+                    </td>
+                    <td class="cell-center">{{ row.customerCode }}</td>
+                    <td class="adjust-name-cell" :title="row.customerName">{{ row.customerName }}</td>
+                    <td class="cell-center">
+                      <input v-model.number="row.prepayDelta" type="number" step="0.01" placeholder="正涨负降" class="adjust-input" style="width: 96px" />
+                    </td>
+                    <td class="cell-center">
+                      <input v-model.number="row.priceDelta" type="number" step="0.01" placeholder="正涨负降" class="adjust-input" style="width: 84px" />
+                    </td>
+                    <td class="cell-center">
+                      <el-date-picker v-model="row.startTime" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 130px" :clearable="false" />
+                    </td>
+                    <td style="text-align: center">
+                      <el-switch v-model="row.fiveAreaFlag" />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div v-if="batchAdjustRows.length === 0" class="adjust-empty">请从左侧添加要调价的客户</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px">
+          <button
+            @click="closeBatchAdjustModal"
+            style="margin-right: 12px; padding: 8px 24px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer"
+          >
+            取消
+          </button>
+          <button class="search-btn" style="padding: 8px 28px" @click="submitBatchAdjust">提交调价</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -710,6 +851,199 @@ async function doExportAllPrice() {
   } catch (e) {
     console.error("导出失败", e);
     proxy.$msg(e?.message || "导出失败，请稍后重试");
+  }
+}
+
+// ==================== 批量修改价格 ====================
+const batchAdjustVisible = ref(false);
+const batchAdjustSearchName = ref("");
+const batchAdjustCandidates = ref([]);
+const batchAdjustRows = ref([]);
+const leftChecked = ref([]); // 左侧勾选的客户编码
+const rightChecked = ref([]); // 右侧勾选的客户编码
+// 统一设置行：填写后同步到右侧所有客户
+const batchPreset = reactive({
+  prepayDelta: null,
+  priceDelta: null,
+  startTime: null,
+  fiveAreaFlag: false,
+});
+
+function tomorrowStr() {
+  const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const p = (n) => (n < 10 ? "0" + n : "" + n);
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function openBatchAdjustModal() {
+  batchAdjustVisible.value = true;
+  batchAdjustSearchName.value = "";
+  batchAdjustRows.value = [];
+  leftChecked.value = [];
+  rightChecked.value = [];
+  batchPreset.prepayDelta = null;
+  batchPreset.priceDelta = null;
+  batchPreset.startTime = null;
+  batchPreset.fiveAreaFlag = false;
+  searchAdjustCustomers();
+}
+
+function closeBatchAdjustModal() {
+  batchAdjustVisible.value = false;
+  batchAdjustCandidates.value = [];
+  batchAdjustRows.value = [];
+  leftChecked.value = [];
+  rightChecked.value = [];
+}
+
+// 查询有当前生效价格的客户（名称模糊匹配）
+async function searchAdjustCustomers() {
+  try {
+    const res = await axios.get("/api/customer/listWithPrice", {
+      params: { name: batchAdjustSearchName.value || undefined },
+    });
+    if (res.data.code === 200) {
+      batchAdjustCandidates.value = res.data.data || [];
+    } else {
+      proxy.$msg(res.data.message || "查询客户列表失败");
+    }
+  } catch (e) {
+    console.error("查询客户列表失败", e);
+    // 业务异常信息由 axios 拦截器统一弹出
+  }
+}
+
+// 左侧候选列表：排除已在右侧的客户，再按名称/编码筛选
+const filteredCandidates = computed(() => {
+  const kw = batchAdjustSearchName.value.trim();
+  const inRows = new Set(batchAdjustRows.value.map((r) => r.customerCode));
+  return batchAdjustCandidates.value.filter((c) => {
+    if (inRows.has(c.customerCode)) return false;
+    if (!kw) return true;
+    return (c.customerName || "").includes(kw) || (c.customerCode || "").includes(kw);
+  });
+});
+
+const isAllLeftChecked = computed(
+  () =>
+    filteredCandidates.value.length > 0 &&
+    filteredCandidates.value.every((c) => leftChecked.value.includes(c.customerCode))
+);
+const isLeftIndeterminate = computed(
+  () => leftChecked.value.length > 0 && !isAllLeftChecked.value
+);
+
+function toggleLeftAll(e) {
+  leftChecked.value = e.target.checked
+    ? filteredCandidates.value.map((c) => c.customerCode)
+    : [];
+}
+function toggleLeftItem(code) {
+  const i = leftChecked.value.indexOf(code);
+  if (i > -1) leftChecked.value.splice(i, 1);
+  else leftChecked.value.push(code);
+}
+function toggleRightItem(code) {
+  const i = rightChecked.value.indexOf(code);
+  if (i > -1) rightChecked.value.splice(i, 1);
+  else rightChecked.value.push(code);
+}
+
+const isAllRightChecked = computed(
+  () =>
+    batchAdjustRows.value.length > 0 &&
+    batchAdjustRows.value.every((r) => rightChecked.value.includes(r.customerCode))
+);
+const isRightIndeterminate = computed(
+  () => rightChecked.value.length > 0 && !isAllRightChecked.value
+);
+function toggleRightAll(e) {
+  rightChecked.value = e.target.checked
+    ? batchAdjustRows.value.map((r) => r.customerCode)
+    : [];
+}
+
+// 统一设置行某字段变化 → 同步到右侧所有客户（未填的字段不同步，避免覆盖）
+function syncPreset(field) {
+  const v = batchPreset[field];
+  if (v === null || v === undefined || v === "") return;
+  batchAdjustRows.value.forEach((r) => {
+    r[field] = v;
+  });
+}
+
+// 批量添加到右侧（默认开始时间=明天，五区=否；统一设置行已填的字段直接继承）
+function moveToRight() {
+  const selected = filteredCandidates.value.filter((c) =>
+    leftChecked.value.includes(c.customerCode)
+  );
+  selected.forEach((c) => {
+    batchAdjustRows.value.push({
+      customerCode: c.customerCode,
+      customerName: c.customerName,
+      prepayDelta: batchPreset.prepayDelta ?? null,
+      priceDelta: batchPreset.priceDelta ?? null,
+      startTime: batchPreset.startTime || tomorrowStr(),
+      fiveAreaFlag: batchPreset.fiveAreaFlag,
+    });
+  });
+  leftChecked.value = [];
+}
+
+// 批量从右侧移除（回到左侧候选）
+function moveToLeft() {
+  const set = new Set(rightChecked.value);
+  batchAdjustRows.value = batchAdjustRows.value.filter(
+    (r) => !set.has(r.customerCode)
+  );
+  rightChecked.value = [];
+}
+
+async function submitBatchAdjust() {
+  const rows = batchAdjustRows.value;
+  if (rows.length === 0) {
+    proxy.$msg("请先添加要调价的客户");
+    return;
+  }
+  for (const r of rows) {
+    if (!r.startTime) {
+      proxy.$msg(`客户「${r.customerName}」未选择开始时间`);
+      return;
+    }
+    const hasPrice = r.priceDelta !== null && r.priceDelta !== undefined && r.priceDelta !== "";
+    const hasPrepay = r.prepayDelta !== null && r.prepayDelta !== undefined && r.prepayDelta !== "";
+    if (!hasPrice && !hasPrepay) {
+      proxy.$msg(`客户「${r.customerName}」至少填写一个调整金额`);
+      return;
+    }
+  }
+
+  const ok = await proxy.$confirm(
+    `确定对 ${rows.length} 个客户执行批量调价吗？该操作为整体事务，任一客户失败将全部回滚。`
+  );
+  if (!ok) return;
+
+  try {
+    const res = await axios.post(
+      "/api/customer/batchAdjustPrice",
+      rows.map((r) => ({
+        code: r.customerCode,
+        startTime: r.startTime,
+        priceDelta: r.priceDelta === "" ? null : r.priceDelta,
+        prepayDelta: r.prepayDelta === "" ? null : r.prepayDelta,
+        fiveAreaFlag: r.fiveAreaFlag,
+      }))
+    );
+    if (res.data.code !== 200) {
+      proxy.$msg(res.data.message || "批量调价失败");
+      return;
+    }
+    proxy.$msg("批量调价成功");
+    closeBatchAdjustModal();
+    getList();
+  } catch (e) {
+    console.error("批量调价失败", e);
+    // 业务异常信息由 axios 拦截器统一弹出
   }
 }
 
@@ -2005,5 +2339,172 @@ input[type="number"]::-webkit-outer-spin-button {
 .area-item {
   display: block;
   margin-bottom: 2px;
+}
+
+/* ==================== 批量修改价格：左右穿梭结构 ==================== */
+.adjust-transfer {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 4px;
+}
+.adjust-panel {
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.adjust-panel.left {
+  width: 380px;
+  flex-shrink: 0;
+}
+.adjust-panel.right {
+  flex: 1;
+  min-width: 0;
+}
+.adjust-panel-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+  color: #303133;
+}
+.adjust-check-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.adjust-count {
+  color: #909399;
+  font-size: 12px;
+}
+.adjust-search {
+  margin: 8px 10px;
+  padding: 6px 10px;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+.adjust-search:focus {
+  border-color: #409eff;
+}
+/* 统一设置行 */
+.adjust-preset {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 8px 12px;
+  background: #ecf5ff;
+  border-bottom: 1px solid #d9ecff;
+  font-size: 13px;
+  color: #606266;
+}
+.adjust-preset label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.adjust-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 460px;
+}
+.adjust-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  border-top: 1px solid #f7f7f7;
+}
+.adjust-item:first-child {
+  border-top: none;
+}
+.adjust-item:hover {
+  background: #f5f7fa;
+}
+.adjust-code {
+  color: #909399;
+  font-size: 12px;
+  width: 88px;
+  flex-shrink: 0;
+}
+.adjust-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.adjust-middle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.adjust-arrow {
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+.adjust-arrow:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.adjust-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.adjust-table thead th {
+  background: #fafafa;
+  color: #606266;
+  font-weight: 600;
+  padding: 8px 6px;
+  border-bottom: 1px solid #ebeef5;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.adjust-table tbody td {
+  padding: 6px 6px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.adjust-table tbody tr:hover {
+  background: #f5f7fa;
+}
+.cell-center {
+  text-align: center;
+}
+.adjust-name-cell {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.adjust-input {
+  padding: 4px 8px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+}
+.adjust-input:focus {
+  border-color: #409eff;
+}
+.adjust-empty {
+  padding: 30px 0;
+  text-align: center;
+  color: #909399;
+  font-size: 13px;
 }
 </style>
