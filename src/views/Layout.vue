@@ -262,6 +262,7 @@ const getComponentName = (path) => {
     '/report/policy': 'Policy',
     '/report/cost': 'CostManagement',
     '/finance/expense': 'ExpenseManage',
+    '/finance/fund-flow': 'FundFlow',
     '/dashboard': 'Dashboard'
   }
   return pathMap[path] || ''

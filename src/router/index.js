@@ -133,6 +133,12 @@ const routes = [
         component: () => import("../views/ExpenseManage.vue"),
         meta: { title: "报销管理" },
       },
+      {
+        path: "finance/fund-flow",
+        name: "FundFlow",
+        component: () => import("../views/FundFlow.vue"),
+        meta: { title: "资金流水" },
+      },
       
       {
         path: "quality/fake-sign",
