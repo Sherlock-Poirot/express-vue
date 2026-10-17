@@ -1,260 +1,284 @@
 <template>
   <div class="fund-flow">
-    <!-- ================= 顶部工具条 ================= -->
-    <div class="flow-toolbar">
-      <div class="toolbar-left">
-        <span class="toolbar-bar"></span>
-        <span class="toolbar-title">资金流水</span>
-        <el-tag type="info" effect="plain" round size="small">{{ today }}</el-tag>
-      </div>
-      <div class="toolbar-right">
-        <el-button @click="handleAutoMatch">自动匹配</el-button>
-        <el-button @click="handleClearPlan">清空占配</el-button>
-        <el-button type="primary" :disabled="!canConfirm" @click="handleConfirm">确认匹配</el-button>
+    <!-- ================= 顶部概览（标题 + 今日挂账统计） ================= -->
+    <div class="flow-panel">
+      <div class="panel-body">
+        <div class="overview-head">
+          <span class="toolbar-bar"></span>
+          <span class="toolbar-title">资金流水</span>
+          <el-tag type="info" effect="plain" round size="small">{{ today }}</el-tag>
+        </div>
+        <div class="stat-cards">
+          <div class="stat-card">
+            <div class="stat-label">今日挂账</div>
+            <div class="stat-val num-blue">¥{{ fmt(todayHangAmount) }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">未匹配面单</div>
+            <div class="stat-val num-orange">{{ unmatchedCount }} 笔</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- ================= 上半部：面单明细 + 资金流水明细 ================= -->
+    <!-- ================= 面单明细 + 资金流水明细（左右联动） ================= -->
     <div class="flow-panels">
       <!-- 左：面单明细 -->
-      <div class="flow-panel">
-        <div class="panel-head">
-          <span class="panel-title">面单明细</span>
-          <span class="panel-sub">共 <b>{{ waybills.length }}</b> 笔 · 未匹配金额 ¥{{ fmt(sumWaybillRemain) }}</span>
-        </div>
-        <div class="panel-body">
-          <!-- 筛选（对应 /flowDetail/recharge/list 的查询参数） -->
-          <el-form :inline="true" :model="searchForm" size="small" class="waybill-search">
-            <el-form-item label="来源客户">
-              <el-input v-model="searchForm.fromCustName" placeholder="客户名称（模糊）" clearable style="width: 140px" />
-            </el-form-item>
-            <el-form-item label="操作类型">
-              <el-input v-model="searchForm.operateType" placeholder="精确匹配" clearable style="width: 100px" />
-            </el-form-item>
-            <el-form-item label="支付方式">
-              <el-input v-model="searchForm.payType" placeholder="精确匹配" clearable style="width: 100px" />
-            </el-form-item>
-            <el-form-item label="匹配状态">
-              <el-select v-model="searchForm.matchStatus" placeholder="全部" clearable style="width: 100px">
-                <el-option label="未匹配" :value="0" />
-                <el-option label="部分匹配" :value="1" />
-                <el-option label="已匹配" :value="2" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="操作时间">
-              <el-date-picker
-                v-model="searchForm.timeRange"
-                type="datetimerange"
-                range-separator="至"
-                start-placeholder="开始时间"
-                end-placeholder="结束时间"
-                value-format="YYYY-MM-DD HH:mm:ss"
-                style="width: 320px"
+      <div class="flow-panel panel-waybill">
+      <div class="panel-head">
+        <span class="panel-title">面单明细</span>
+        <span class="panel-sub">共 <b>{{ waybills.length }}</b> 笔 · 未匹配金额 ¥{{ fmt(sumWaybillRemain) }}</span>
+        <el-upload
+          :show-file-list="false"
+          accept=".xlsx,.xls"
+          :http-request="doWaybillImport"
+        >
+          <el-button type="primary" size="small" :loading="importing">导入</el-button>
+        </el-upload>
+      </div>
+      <div class="panel-body">
+        <!-- 筛选（对应 /flowDetail/recharge/list 的查询参数） -->
+        <el-form :inline="true" :model="searchForm" size="small" class="waybill-search">
+          <el-form-item label="来源客户">
+            <el-input v-model="searchForm.fromCustName" placeholder="客户名称（模糊）" clearable style="width: 140px" />
+          </el-form-item>
+          <el-form-item label="目的客户">
+            <el-input v-model="searchForm.toCustName" placeholder="客户名称（模糊）" clearable style="width: 140px" />
+          </el-form-item>
+          <el-form-item label="操作类型">
+            <el-input v-model="searchForm.operateType" placeholder="精确匹配" clearable style="width: 100px" />
+          </el-form-item>
+          <el-form-item label="支付方式">
+            <el-input v-model="searchForm.payType" placeholder="精确匹配" clearable style="width: 100px" />
+          </el-form-item>
+          <el-form-item label="匹配状态">
+            <el-select v-model="searchForm.matchStatus" placeholder="全部" clearable style="width: 100px">
+              <el-option label="未匹配" :value="0" />
+              <el-option label="部分匹配" :value="1" />
+              <el-option label="已匹配" :value="2" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="操作时间">
+            <el-date-picker
+              v-model="searchForm.timeRange"
+              type="datetimerange"
+              range-separator="至"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              :default-time="pickerDefaultTime"
+              style="width: 320px"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="getWaybillList">查询</el-button>
+            <el-button @click="resetSearch">重置</el-button>
+          </el-form-item>
+        </el-form>
+
+        <el-table
+          ref="waybillTableRef"
+          :data="waybills"
+          v-loading="loading"
+          size="small"
+          border
+          height="100%"
+          class="flex-table"
+          row-key="id"
+          @selection-change="onWaybillSelect"
+        >
+          <el-table-column type="selection" width="42" :selectable="(w) => w.matchStatus === 0" fixed />
+          <el-table-column prop="fromCustName" label="来源客户" min-width="110" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="toShopName" label="目的店铺" min-width="100" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="toCustName" label="目的客户" min-width="100" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="operateType" label="操作类型" width="76" header-align="center" />
+          <el-table-column prop="rechargePlatform" label="充值平台" width="76" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="operateQty" label="数量" width="60" align="right" header-align="center" />
+          <el-table-column label="单价" width="80" align="right" header-align="center">
+            <template #default="{ row }">
+              <el-input
+                v-if="isEditing(row, 'unitPrice')"
+                v-model="editValue"
+                v-focus
+                size="small"
+                class="cell-edit-input"
+                @keyup.enter="saveEdit(row)"
+                @keyup.esc="cancelEdit"
+                @blur="saveEdit(row)"
               />
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="getWaybillList">查询</el-button>
-              <el-button @click="resetSearch">重置</el-button>
-            </el-form-item>
-          </el-form>
-
-          <el-table
-            ref="waybillTableRef"
-            :data="waybills"
-            v-loading="loading"
-            size="small"
-            border
-            height="352"
-            row-key="id"
-            @selection-change="onWaybillSelect"
-          >
-            <el-table-column type="selection" width="42" :selectable="(w) => w.matchStatus === 0" />
-            <el-table-column prop="fromCustName" label="来源客户" min-width="120" show-overflow-tooltip />
-            <el-table-column prop="operateType" label="操作类型" width="88" />
-            <el-table-column prop="rechargePlatform" label="充值平台" width="90" show-overflow-tooltip />
-            <el-table-column prop="operateQty" label="数量" width="70" align="right" />
-            <el-table-column label="单价" width="88" align="right">
-              <template #default="{ row }">{{ fmt(row.unitPrice) }}</template>
-            </el-table-column>
-            <el-table-column label="金额" width="96" align="right">
-              <template #default="{ row }"><span class="num-blue">¥{{ fmt(row.amount) }}</span></template>
-            </el-table-column>
-            <el-table-column prop="payType" label="支付方式" width="82" />
-            <el-table-column prop="operateTime" label="操作时间" width="150" />
-            <el-table-column prop="operator" label="操作人" width="80" show-overflow-tooltip />
-            <el-table-column label="匹配状态" width="86" align="center">
-              <template #default="{ row }">
-                <el-tag :type="waybillStatus(row).type" size="small" effect="light">{{ waybillStatus(row).text }}</el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </div>
-
-      <!-- 右：资金流水明细 -->
-      <div class="flow-panel">
-        <div class="panel-head">
-          <span class="panel-title">资金流水明细</span>
-          <span class="panel-sub">待匹配 <b>{{ visibleFlows.length }}</b> 笔 · 收款余额 ¥{{ fmt(sumFlowRemain) }}</span>
-        </div>
-        <div class="panel-body">
-          <el-table
-            ref="flowTableRef"
-            :data="visibleFlows"
-            v-loading="loading"
-            size="small"
-            border
-            height="352"
-            row-key="no"
-            @selection-change="onFlowSelect"
-          >
-            <el-table-column type="selection" width="42" :selectable="(f) => f.remain > 0.005 && f.direction === '收入'" />
-            <el-table-column prop="no" label="流水号" width="112" />
-            <el-table-column prop="customer" label="客户/店铺" min-width="130" show-overflow-tooltip />
-            <el-table-column label="收付" width="62" align="center">
-              <template #default="{ row }">
-                <el-tag :type="row.direction === '收入' ? 'success' : 'warning'" size="small" effect="plain">{{ row.direction }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="收款方式" width="90">
-              <template #default="{ row }">
-                <el-tag :type="methodType(row.method)" size="small" effect="plain">{{ row.method }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="金额" width="92" align="right">
-              <template #default="{ row }">¥{{ fmt(row.amount) }}</template>
-            </el-table-column>
-            <el-table-column label="已匹配" width="82" align="right">
-              <template #default="{ row }">¥{{ fmt(row.matched) }}</template>
-            </el-table-column>
-            <el-table-column label="未匹配" width="82" align="right">
-              <template #default="{ row }"><span class="num-green">¥{{ fmt(row.remain) }}</span></template>
-            </el-table-column>
-            <el-table-column label="状态" width="82" align="center">
-              <template #default="{ row }">
-                <el-tag :type="flowStatus(row).type" size="small" effect="light">{{ flowStatus(row).text }}</el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ================= 下半部：今日挂/销账 + 明细匹配内容 ================= -->
-    <div class="flow-panels bottom">
-      <!-- 今日挂 / 销账 -->
-      <div class="flow-panel hang-panel">
-        <div class="panel-head">
-          <span class="panel-title">今日挂 / 销账</span>
-          <span class="panel-sub">{{ today }}</span>
-        </div>
-        <div class="panel-body">
-          <div class="stat-cards">
-            <div class="stat-card">
-              <div class="stat-label">今日挂账</div>
-              <div class="stat-val num-blue">¥{{ fmt(todayHangAmount) }}</div>
-              <div class="stat-sub">{{ todayHangCount }} 笔</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">今日销账</div>
-              <div class="stat-val num-green">¥{{ fmt(todayWriteoffAmount) }}</div>
-              <div class="stat-sub">{{ todayWriteoffCount }} 笔</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">待处理挂账余额</div>
-              <div class="stat-val num-orange">¥{{ fmt(totalHangRemain) }}</div>
-              <div class="stat-sub">累计未匹配</div>
-            </div>
-          </div>
-
-          <div class="list-title">今日挂 / 销账明细</div>
-          <el-table :data="todayActivities" size="small" border height="206">
-            <el-table-column label="类型" width="76" align="center">
-              <template #default="{ row }">
-                <el-tag :type="row.kind === '挂账' ? 'info' : 'success'" size="small" effect="plain">{{ row.kind }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="no" label="单号" width="120" />
-            <el-table-column prop="customer" label="客户" min-width="140" show-overflow-tooltip />
-            <el-table-column label="金额" width="104" align="right">
-              <template #default="{ row }">¥{{ fmt(row.amount) }}</template>
-            </el-table-column>
-            <el-table-column prop="time" label="时间" width="164" />
-          </el-table>
-        </div>
-      </div>
-
-      <!-- 明细匹配内容 -->
-      <div class="flow-panel match-panel">
-        <div class="panel-head">
-          <span class="panel-title">明细匹配内容</span>
-          <div class="match-tabs">
-            <span class="match-tab" :class="{ active: matchTab === 'pending' }" @click="matchTab = 'pending'">
-              待确认占配 ({{ plan.length }})
-            </span>
-            <span class="match-tab" :class="{ active: matchTab === 'done' }" @click="matchTab = 'done'">
-              已匹配明细 ({{ matchRecords.length }})
-            </span>
-          </div>
-        </div>
-        <div class="panel-body">
-          <!-- 待确认占配 -->
-          <template v-if="matchTab === 'pending'">
-            <div v-if="!plan.length" class="empty-tip">
-              勾选左侧面单与右侧资金流水后，将按「日期优先、先勾先占」自动生成占配关系；也可点击「自动匹配」一键生成。
-            </div>
-            <template v-else>
-              <el-table :data="plan" size="small" border height="272">
-                <el-table-column type="index" label="#" width="48" align="center" />
-                <el-table-column prop="waybillNo" label="面单号" width="120" />
-                <el-table-column prop="flowNo" label="流水号" width="120" />
-                <el-table-column prop="customer" label="客户" min-width="140" show-overflow-tooltip />
-                <el-table-column label="匹配金额" width="168">
-                  <template #default="{ row, $index }">
-                    <el-input-number
-                      v-model="row.amount"
-                      :min="0"
-                      :max="planRowMax(row)"
-                      :step="100"
-                      size="small"
-                      controls-position="right"
-                      @change="onPlanAmountChange($index)"
-                    />
-                  </template>
-                </el-table-column>
-                <el-table-column label="操作" width="76" align="center">
-                  <template #default="{ $index }">
-                    <el-button link type="danger" size="small" @click="removePlanRow($index)">移除</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-              <div class="match-foot">共 {{ plan.length }} 条占配 · 合计 ¥{{ fmt(planTotal) }}</div>
+              <div v-else class="cell-editable" title="点击编辑" @click="startEdit(row, 'unitPrice')">{{ fmt(row.unitPrice) }}</div>
             </template>
-          </template>
-
-          <!-- 已匹配明细 -->
-          <template v-else>
-            <div v-if="!matchRecords.length" class="empty-tip">暂无匹配记录，确认匹配后将在此显示。</div>
-            <el-table v-else :data="matchRecords" size="small" border height="272">
-              <el-table-column prop="no" label="匹配单号" width="120" />
-              <el-table-column prop="waybillNo" label="面单号" width="120" />
-              <el-table-column prop="flowNo" label="流水号" width="120" />
-              <el-table-column prop="customer" label="客户" min-width="140" show-overflow-tooltip />
-              <el-table-column label="匹配金额" width="104" align="right">
-                <template #default="{ row }">¥{{ fmt(row.amount) }}</template>
-              </el-table-column>
-              <el-table-column prop="time" label="匹配时间" width="164" />
-              <el-table-column prop="operator" label="操作人" width="82" />
-              <el-table-column label="操作" width="76" align="center">
-                <template #default="{ row }">
-                  <el-button link type="danger" size="small" @click="handleReverse(row)">撤销</el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-          </template>
-        </div>
+          </el-table-column>
+          <el-table-column label="金额" width="88" align="right" header-align="center">
+            <template #default="{ row }">
+              <el-input
+                v-if="isEditing(row, 'amount')"
+                v-model="editValue"
+                v-focus
+                size="small"
+                class="cell-edit-input"
+                @keyup.enter="saveEdit(row)"
+                @keyup.esc="cancelEdit"
+                @blur="saveEdit(row)"
+              />
+              <div v-else class="cell-editable num-blue" title="点击编辑" @click="startEdit(row, 'amount')">¥{{ fmt(row.amount) }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="支付方式" width="92" header-align="center">
+            <template #default="{ row }">
+              <el-input
+                v-if="isEditing(row, 'payType')"
+                v-model="editValue"
+                v-focus
+                size="small"
+                class="cell-edit-input cell-edit-text"
+                @keyup.enter="saveEdit(row)"
+                @keyup.esc="cancelEdit"
+                @blur="saveEdit(row)"
+              />
+              <div v-else class="cell-editable" title="点击编辑" @click="startEdit(row, 'payType')">{{ row.payType }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="specialRemark" label="特殊备注" min-width="110" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="remark" label="备注" min-width="110" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="operateTime" label="操作时间" width="150" header-align="center" />
+          <el-table-column prop="operator" label="操作人" width="80" show-overflow-tooltip header-align="center" />
+          <el-table-column label="匹配状态" width="86" align="center" fixed="right">
+            <template #default="{ row }">
+              <el-tag :type="waybillStatus(row).type" size="small" effect="light">{{ waybillStatus(row).text }}</el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
       </div>
     </div>
+
+      <!-- 右：资金流水明细（按平台分 Tab，切换即查询） -->
+      <div class="flow-panel panel-cash">
+      <div class="panel-head">
+        <span class="panel-title">资金流水明细</span>
+        <span class="panel-sub">
+          共 <b>{{ fundFlows.length }}</b> 笔 · 待匹配 <b>{{ unmatchedFlowCount }}</b> 笔 · 待收 ¥{{ fmt(sumFlowRemain) }}
+        </span>
+        <el-button type="primary" size="small" @click="openCashImport">导入</el-button>
+      </div>
+      <div class="panel-body">
+        <!-- 平台 Tab（字典来自 /flowDetail/cash/platforms） -->
+        <el-tabs v-model="activePlatform" class="platform-tabs" @tab-change="onPlatformChange">
+          <el-tab-pane label="全部" name="all" />
+          <el-tab-pane v-for="p in platformOptions" :key="p.value" :label="p.label" :name="String(p.value)" />
+        </el-tabs>
+
+        <!-- 筛选（对应 /flowDetail/cash/list 的查询参数） -->
+        <el-form :inline="true" :model="cashSearchForm" size="small" class="cash-search">
+          <el-form-item label="客户名称">
+            <el-input v-model="cashSearchForm.custName" placeholder="客户名称（模糊）" clearable style="width: 130px" />
+          </el-form-item>
+          <el-form-item label="收支">
+            <el-select v-model="cashSearchForm.actualType" placeholder="全部" clearable style="width: 88px">
+              <el-option label="收入" :value="1" />
+              <el-option label="支出" :value="-1" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="标记类型">
+            <el-select v-model="cashSearchForm.markType" placeholder="全部" clearable style="width: 100px">
+              <el-option label="收入" :value="1" />
+              <el-option label="支出" :value="-1" />
+              <el-option label="不计收支" :value="0" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="匹配状态">
+            <el-select v-model="cashSearchForm.matchStatus" placeholder="全部" clearable style="width: 92px">
+              <el-option label="未匹配" :value="0" />
+              <el-option label="已匹配" :value="1" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="金额">
+            <el-input v-model="cashSearchForm.minAmount" placeholder="最小" style="width: 70px" />
+            <span style="margin: 0 4px; color: #c0c4cc">-</span>
+            <el-input v-model="cashSearchForm.maxAmount" placeholder="最大" style="width: 70px" />
+          </el-form-item>
+          <el-form-item label="操作时间">
+            <el-date-picker
+              v-model="cashSearchForm.timeRange"
+              type="datetimerange"
+              range-separator="至"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              :default-time="pickerDefaultTime"
+              style="width: 300px"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="getCashList">查询</el-button>
+            <el-button @click="resetCashSearch">重置</el-button>
+          </el-form-item>
+        </el-form>
+
+        <el-table
+          ref="flowTableRef"
+          :data="fundFlows"
+          v-loading="cashLoading"
+          size="small"
+          border
+          height="100%"
+          class="flex-table"
+          row-key="id"
+          @selection-change="onFlowSelect"
+        >
+          <el-table-column type="selection" width="42" :selectable="(f) => f.actualType === 1 && f.matchStatus === 0" />
+          <el-table-column prop="operateTime" label="操作时间" width="150" header-align="center" />
+          <el-table-column prop="custName" label="客户名称" min-width="120" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="category" label="类目" min-width="100" show-overflow-tooltip header-align="center" />
+          <el-table-column label="金额" width="104" align="right" header-align="center">
+            <template #default="{ row }">
+              <span :class="row.actualType === 1 ? 'num-green' : 'num-orange'">
+                {{ row.actualType === 1 ? '+' : '-' }}¥{{ fmt(row.amount) }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="实际收支" width="80" align="center">
+            <template #default="{ row }">
+              <el-tag :type="row.actualType === 1 ? 'success' : 'warning'" size="small" effect="plain">
+                {{ row.actualType === 1 ? '收入' : '支出' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="remark" label="备注" min-width="110" show-overflow-tooltip header-align="center" />
+          <el-table-column label="匹配状态" width="84" align="center" fixed="right">
+            <template #default="{ row }">
+              <el-tag :type="row.matchStatus === 1 ? 'success' : 'danger'" size="small" effect="light">
+                {{ row.matchStatus === 1 ? '已匹配' : '未匹配' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      </div>
+    </div>
+
+    <!-- 资金流水导入弹窗（先选平台，再选文件） -->
+    <el-dialog v-model="cashImportVisible" title="导入资金流水" width="440px" :close-on-click-modal="false">
+      <el-form label-width="64px" size="default">
+        <el-form-item label="平台" required>
+          <el-select v-model="cashImportForm.platform" placeholder="请选择平台" style="width: 100%">
+            <el-option v-for="p in platformOptions" :key="p.value" :label="p.label" :value="p.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="文件" required>
+          <div class="import-file-row">
+            <el-upload :auto-upload="false" :show-file-list="false" accept=".xlsx,.xls" :on-change="onCashFileChange">
+              <el-button>选择文件</el-button>
+            </el-upload>
+            <span v-if="cashImportForm.file" class="import-file-name">{{ cashImportForm.file.name }}</span>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="cashImportVisible = false">取消</el-button>
+        <el-button type="primary" :loading="cashImporting" @click="doCashImport">开始导入</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -263,10 +287,9 @@ defineOptions({
   name: 'FundFlow'
 })
 
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
-import { getUser } from '@/utils/auth'
 
 /* =========================================================
    基础工具
@@ -277,40 +300,53 @@ const fmt = (n) =>
 const pad = (n) => String(n).padStart(2, '0')
 const fmtDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 const today = fmtDate(new Date())
-const nowStr = () => {
-  const d = new Date()
-  return `${fmtDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-}
-
-/* =========================================================
-   展示字典（收款方式标签配色，非业务数据）
-   ========================================================= */
-const METHOD_TAG = { 银行转账: 'primary', 微信: 'success', 支付宝: 'info', 现金: 'warning', 月结: 'danger' }
-
-const currentUser = getUser()
 
 /* =========================================================
    数据
    ---------------------------------------------------------
    已接入：
      GET  /api/flowDetail/recharge/list   面单明细（支持筛选）
+     GET  /api/flowDetail/cash/list       资金流水明细（支持筛选 + 平台 Tab）
+     GET  /api/flowDetail/cash/platforms  资金流水平台字典
    待接入：
-     GET  /api/flowDetail/cash/list       资金流水明细（后端待开发）
      POST /api/flowDetail/match           确认匹配 { rechargeIds, cashIds }
      POST /api/flowDetail/unmatch         取消匹配 { rechargeIds, cashIds }
    ========================================================= */
 const loading = ref(false)
 const waybills = ref([])     // 面单明细（接口原始行 + 规范化辅助字段）
-const fundFlows = ref([])    // 资金流水明细（接口待开发）
-const matchRecords = ref([]) // 已匹配记录（接口待开发）
+const fundFlows = ref([])    // 资金流水明细（当前平台 Tab 数据）
+const cashLoading = ref(false)
+
+/* 平台字典（Tab 与导入弹窗共用，进入页面加载一次） */
+const platformOptions = ref([])
+const activePlatform = ref('all')   // 'all' 或平台 value 的字符串
+const loadPlatforms = async () => {
+  try {
+    const res = await axios.get('/api/flowDetail/cash/platforms')
+    platformOptions.value = res.data.data || []
+  } catch (err) {
+    console.error('获取平台列表失败:', err)
+  }
+}
+
+/* 默认查询 T-1 全天 */
+const yesterdayStr = () => {
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  return fmtDate(d)
+}
+const defaultTimeRange = () => [`${yesterdayStr()} 00:00:00`, `${yesterdayStr()} 23:59:59`]
+/* 选择器内新选时间的默认时刻：开始 00:00:00，结束 23:59:59 */
+const pickerDefaultTime = [new Date(2000, 0, 1, 0, 0, 0), new Date(2000, 0, 1, 23, 59, 59)]
 
 /* 面单明细筛选（对应接口查询参数） */
 const searchForm = ref({
   fromCustName: '',
+  toCustName: '',
   operateType: '',
   payType: '',
   matchStatus: null,
-  timeRange: null
+  timeRange: defaultTimeRange()
 })
 
 /* 后端 LocalDateTime 序列化可能是 "2026-10-16T10:00:00" 或 "2026-10-16 10:00:00"，统一成后者 */
@@ -338,6 +374,7 @@ const getWaybillList = async () => {
     const params = {}
     const s = searchForm.value
     if (s.fromCustName) params.fromCustName = s.fromCustName
+    if (s.toCustName) params.toCustName = s.toCustName
     if (s.operateType) params.operateType = s.operateType
     if (s.payType) params.payType = s.payType
     if (s.matchStatus !== null && s.matchStatus !== '') params.matchStatus = s.matchStatus
@@ -357,77 +394,256 @@ const getWaybillList = async () => {
 const resetSearch = () => {
   searchForm.value = {
     fromCustName: '',
+    toCustName: '',
     operateType: '',
     payType: '',
     matchStatus: null,
-    timeRange: null
+    timeRange: defaultTimeRange()
   }
   getWaybillList()
 }
 
-const loadData = () => {
-  getWaybillList()
-  // TODO: 资金流水明细 / 已匹配记录接口开发完成后在此加载
+/* 面单流水导入：POST /api/flowDetail/recharge/import（multipart，字段名 file） */
+const importing = ref(false)
+const doWaybillImport = async ({ file }) => {
+  importing.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await axios.post('/api/flowDetail/recharge/import', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    if (res.data.code === 200) {
+      ElMessage.success(`导入成功，共 ${res.data.data ?? 0} 条`)
+      getWaybillList()
+    } else {
+      ElMessage.error(res.data.message || '导入失败')
+    }
+  } catch (err) {
+    console.error('面单导入失败:', err)
+    ElMessage.error(err.response?.data?.message || '导入失败，请检查文件格式')
+  } finally {
+    importing.value = false
+  }
 }
 
-/* 索引：id → 行对象（数据加载后自动更新） */
-const waybillMap = computed(() => {
-  const map = {}
-  waybills.value.forEach((w) => (map[w.id] = w))
-  return map
-})
-const flowMap = computed(() => {
-  const map = {}
-  fundFlows.value.forEach((f) => (map[f.id] = f))
-  return map
+/* 资金流水导入：POST /flowDetail/cash/import(file, platform)，平台字典进入页面时已加载 */
+const cashImportVisible = ref(false)
+const cashImporting = ref(false)
+const cashImportForm = ref({ platform: null, file: null })
+
+const openCashImport = () => {
+  cashImportForm.value = { platform: null, file: null }
+  cashImportVisible.value = true
+}
+
+const onCashFileChange = (uploadFile) => {
+  cashImportForm.value.file = uploadFile.raw
+}
+
+const doCashImport = async () => {
+  const { platform, file } = cashImportForm.value
+  if (!platform) {
+    ElMessage.warning('请选择平台')
+    return
+  }
+  if (!file) {
+    ElMessage.warning('请选择导入文件')
+    return
+  }
+  cashImporting.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('platform', platform)
+    const res = await axios.post('/api/flowDetail/cash/import', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    if (res.data.code === 200) {
+      ElMessage.success(`导入成功，共 ${res.data.data ?? 0} 条`)
+      cashImportVisible.value = false
+      getCashList()
+    } else {
+      ElMessage.error(res.data.message || '导入失败')
+    }
+  } catch (err) {
+    console.error('资金流水导入失败:', err)
+    ElMessage.error(err.response?.data?.message || '导入失败，请检查文件格式')
+  } finally {
+    cashImporting.value = false
+  }
+}
+
+/* 资金流水筛选（对应 /flowDetail/cash/list 查询参数，默认 T-1 全天） */
+const cashSearchForm = ref({
+  custName: '',
+  actualType: null,
+  markType: null,
+  matchStatus: null,
+  minAmount: '',
+  maxAmount: '',
+  timeRange: defaultTimeRange()
 })
 
+/* 行规范化：金额转数值、时间格式化 */
+function normalizeCash(r) {
+  return {
+    ...r,
+    amount: Number(r.amount || 0),
+    operateTime: fmtDateTime(r.operateTime)
+  }
+}
+
+const getCashList = async () => {
+  cashLoading.value = true
+  try {
+    const params = {}
+    const s = cashSearchForm.value
+    if (activePlatform.value !== 'all') params.platform = Number(activePlatform.value)
+    if (s.custName) params.custName = s.custName
+    if (s.actualType !== null && s.actualType !== '') params.actualType = s.actualType
+    if (s.markType !== null && s.markType !== '') params.markType = s.markType
+    if (s.matchStatus !== null && s.matchStatus !== '') params.matchStatus = s.matchStatus
+    if (s.minAmount !== '' && s.minAmount !== null) params.minAmount = s.minAmount
+    if (s.maxAmount !== '' && s.maxAmount !== null) params.maxAmount = s.maxAmount
+    if (s.timeRange && s.timeRange.length === 2) {
+      params.startTime = s.timeRange[0]
+      params.endTime = s.timeRange[1]
+    }
+    const res = await axios.get('/api/flowDetail/cash/list', { params })
+    fundFlows.value = (res.data.data || []).map(normalizeCash)
+    flowTableRef.value?.clearSelection?.()
+  } catch (err) {
+    console.error('获取资金流水明细失败:', err)
+  } finally {
+    cashLoading.value = false
+  }
+}
+
+/* 切换平台 Tab 即按平台查询（activeKey 驱动） */
+const onPlatformChange = () => {
+  getCashList()
+}
+
+const resetCashSearch = () => {
+  cashSearchForm.value = {
+    custName: '',
+    actualType: null,
+    markType: null,
+    matchStatus: null,
+    minAmount: '',
+    maxAmount: '',
+    timeRange: defaultTimeRange()
+  }
+  getCashList()
+}
+
+const loadData = () => {
+  getWaybillList()
+  getCashList()
+}
+
 /* =========================================================
-   交互状态
+   交互状态（勾选暂存，后续匹配换一种展示模式时使用）
    ========================================================= */
 const selectedWaybills = ref([])
 const selectedFlows = ref([])
-const plan = ref([])
-const matchTab = ref('pending')
 const waybillTableRef = ref(null)
 const flowTableRef = ref(null)
+
+const onWaybillSelect = (rows) => {
+  selectedWaybills.value = rows
+}
+const onFlowSelect = (rows) => {
+  selectedFlows.value = rows
+}
+
+/* =========================================================
+   行内编辑（单价 / 金额 / 支付方式）
+   ========================================================= */
+const editCell = ref({ id: null, field: '' })
+const editValue = ref('')
+
+const isEditing = (row, field) => editCell.value.id === row.id && editCell.value.field === field
+
+const vFocus = {
+  mounted: (el) => el.querySelector('input')?.focus()
+}
+
+const startEdit = (row, field) => {
+  editCell.value = { id: row.id, field }
+  editValue.value = String(row[field] ?? '')
+}
+
+const cancelEdit = () => {
+  editCell.value = { id: null, field: '' }
+}
+
+const saveEdit = async (row) => {
+  const { field } = editCell.value
+  if (!field || editCell.value.id !== row.id) return
+
+  let val = editValue.value
+  if (field === 'unitPrice' || field === 'amount') {
+    const num = Number(val)
+    if (val === '' || isNaN(num) || num < 0) {
+      ElMessage.warning('请输入有效的非负数字')
+      cancelEdit()
+      return
+    }
+    val = round2(num)
+  } else {
+    val = String(val ?? '').trim()
+  }
+
+  cancelEdit() // 立刻退出编辑态，避免阻塞其他交互
+
+  if (val === row[field]) return // 无变化不提交
+
+  try {
+    const payload = {
+      id: row.id,
+      unitPrice: row.unitPrice,
+      amount: row.amount,
+      payType: row.payType,
+      [field]: val
+    }
+    const res = await axios.post('/api/flowDetail/recharge/update', payload)
+    if (res.data.code === 200) {
+      row[field] = val
+      if (field === 'amount') {
+        const amount = Number(val || 0)
+        row.matched = row.matchStatus === 0 ? 0 : amount
+        row.remain = row.matchStatus === 0 ? amount : 0
+      }
+      ElMessage.success('已保存')
+    } else {
+      ElMessage.error(res.data.message || '保存失败')
+    }
+  } catch (err) {
+    console.error('保存面单失败:', err)
+    ElMessage.error(err.response?.data?.message || '保存失败')
+  }
+}
 
 /* =========================================================
    派生数据
    ========================================================= */
-const visibleFlows = computed(() => fundFlows.value)
 const sumWaybillRemain = computed(() => round2(waybills.value.reduce((s, w) => s + w.remain, 0)))
+/* 资金流水：待匹配笔数与未匹配收入合计（实收侧 matchStatus 只有 0/1） */
+const unmatchedFlowCount = computed(() => fundFlows.value.filter((f) => f.matchStatus === 0).length)
 const sumFlowRemain = computed(() =>
-  round2(visibleFlows.value.filter((f) => f.direction === '收入').reduce((s, f) => s + f.remain, 0))
+  round2(
+    fundFlows.value
+      .filter((f) => f.actualType === 1 && f.matchStatus === 0)
+      .reduce((s, f) => s + f.amount, 0)
+  )
 )
-const planTotal = computed(() => round2(plan.value.reduce((s, p) => s + Number(p.amount || 0), 0)))
-const canConfirm = computed(() => plan.value.length > 0 && planTotal.value > 0.005)
 
 /* 今日挂 / 销账 */
 const todayHangList = computed(() => waybills.value.filter((w) => w.date === today))
 const todayHangAmount = computed(() => round2(todayHangList.value.reduce((s, w) => s + w.amount, 0)))
-const todayHangCount = computed(() => todayHangList.value.length)
-const todayWriteoffList = computed(() => matchRecords.value.filter((r) => r.time.startsWith(today)))
-const todayWriteoffAmount = computed(() => round2(todayWriteoffList.value.reduce((s, r) => s + r.amount, 0)))
-const todayWriteoffCount = computed(() => todayWriteoffList.value.length)
-const totalHangRemain = computed(() => round2(waybills.value.reduce((s, w) => s + w.remain, 0)))
-const todayActivities = computed(() => {
-  const hangs = todayHangList.value.map((w) => ({
-    kind: '挂账',
-    no: String(w.id),
-    customer: w.customer,
-    amount: w.amount,
-    time: w.operateTime
-  }))
-  const woffs = todayWriteoffList.value.map((r) => ({
-    kind: '销账',
-    no: r.no,
-    customer: r.customer,
-    amount: r.amount,
-    time: r.time
-  }))
-  return [...hangs, ...woffs].sort((a, b) => (a.time < b.time ? 1 : -1))
-})
+const unmatchedCount = computed(() => waybills.value.filter((w) => w.matchStatus === 0).length)
 
 /* =========================================================
    展示辅助
@@ -438,159 +654,11 @@ const waybillStatus = (w) => {
   if (w.matchStatus === 1) return { text: '部分匹配', type: 'warning' }
   return { text: '未匹配', type: 'danger' }
 }
-const flowStatus = (f) => {
-  if (f.direction === '支出') return { text: '支出', type: 'info' }
-  if (f.matched <= 0.005) return { text: '未匹配', type: 'danger' }
-  if (f.matched < f.amount - 0.005) return { text: '部分匹配', type: 'warning' }
-  return { text: '已匹配', type: 'success' }
-}
-const methodType = (m) => METHOD_TAG[m] || 'info'
 
-/* =========================================================
-   占配计算（按客户分组，日期优先、先勾先占的 FIFO 撮合）
-   ========================================================= */
-function recomputePlan() {
-  const next = []
-  const custs = new Set([...selectedWaybills.value, ...selectedFlows.value].map((x) => x.customer))
-  custs.forEach((cust) => {
-    const ws = selectedWaybills.value
-      .filter((w) => w.customer === cust && w.remain > 0.005)
-      .sort((a, b) => (a.date < b.date ? -1 : 1))
-      .map((w) => ({ row: w, need: w.remain }))
-    const fs = selectedFlows.value
-      .filter((f) => f.customer === cust && f.direction === '收入' && f.remain > 0.005)
-      .sort((a, b) => (a.date < b.date ? -1 : 1))
-      .map((f) => ({ row: f, need: f.remain }))
-
-    let i = 0
-    let j = 0
-    while (i < ws.length && j < fs.length) {
-      const a = ws[i]
-      const b = fs[j]
-      const amt = round2(Math.min(a.need, b.need))
-      if (amt > 0.005) next.push({ waybillId: a.row.id, flowId: b.row.id, waybillNo: String(a.row.id), flowNo: String(b.row.id), customer: cust, amount: amt })
-      a.need = round2(a.need - amt)
-      b.need = round2(b.need - amt)
-      if (a.need <= 0.005) i++
-      if (b.need <= 0.005) j++
-    }
-  })
-  plan.value = next
-}
-
-const onWaybillSelect = (rows) => {
-  selectedWaybills.value = rows
-  recomputePlan()
-}
-const onFlowSelect = (rows) => {
-  selectedFlows.value = rows
-  recomputePlan()
-}
-
-/* 自动匹配：勾选当前列表中全部可匹配行，再由 FIFO 生成占配 */
-function handleAutoMatch() {
-  waybillTableRef.value?.clearSelection()
-  flowTableRef.value?.clearSelection()
-  nextTick(() => {
-    waybills.value.forEach((w) => {
-      if (w.remain > 0.005) waybillTableRef.value?.toggleRowSelection(w, true)
-    })
-    visibleFlows.value.forEach((f) => {
-      if (f.remain > 0.005 && f.direction === '收入') {
-        flowTableRef.value?.toggleRowSelection(f, true)
-      }
-    })
-    if (!plan.value.length) ElMessage.info('没有可自动匹配的面单或资金流水')
-    else ElMessage.success(`自动匹配完成：生成 ${plan.value.length} 条占配`)
-  })
-}
-
-function handleClearPlan() {
-  waybillTableRef.value?.clearSelection()
-  flowTableRef.value?.clearSelection()
-  selectedWaybills.value = []
-  selectedFlows.value = []
-  plan.value = []
-  ElMessage.info('已清空本次占配')
-}
-
-/* 占配行的可编辑上限（扣除同面单/同流水其它占配行占用后的余量） */
-function planRowMax(row) {
-  const w = waybillMap.value[row.waybillId]
-  const f = flowMap.value[row.flowId]
-  if (!w || !f) return 0
-  const otherW = plan.value
-    .filter((p) => p.waybillId === row.waybillId && p !== row)
-    .reduce((s, p) => s + Number(p.amount || 0), 0)
-  const otherF = plan.value
-    .filter((p) => p.flowId === row.flowId && p !== row)
-    .reduce((s, p) => s + Number(p.amount || 0), 0)
-  return Math.max(0, round2(Math.min(w.remain - otherW, f.remain - otherF)))
-}
-
-function onPlanAmountChange(index) {
-  const row = plan.value[index]
-  if (row && Number(row.amount) <= 0.005) plan.value.splice(index, 1)
-}
-function removePlanRow(index) {
-  plan.value.splice(index, 1)
-}
-
-/* 确认匹配：写入匹配记录并回写双边余额
-   TODO: 改为 POST /api/flowDetail/match，传 { rechargeIds, cashIds }，成功后刷新列表 */
-function handleConfirm() {
-  if (!canConfirm.value) return
-  const time = nowStr()
-  plan.value.forEach((p) => {
-    const w = waybillMap.value[p.waybillId]
-    const f = flowMap.value[p.flowId]
-    if (!w || !f) return
-    const amt = round2(Math.min(Number(p.amount || 0), w.remain, f.remain))
-    if (amt <= 0.005) return
-    w.matched = round2(w.matched + amt)
-    w.remain = round2(w.remain - amt)
-    f.matched = round2(f.matched + amt)
-    f.remain = round2(f.remain - amt)
-    matchRecords.value.unshift({
-      no: '', // TODO: 匹配单号由后端生成
-      waybillNo: p.waybillNo,
-      flowNo: p.flowNo,
-      customer: w.customer,
-      amount: amt,
-      time,
-      operator: currentUser?.realName || currentUser?.username || ''
-    })
-  })
-  waybillTableRef.value?.clearSelection()
-  flowTableRef.value?.clearSelection()
-  selectedWaybills.value = []
-  selectedFlows.value = []
-  plan.value = []
-  matchTab.value = 'done'
-  ElMessage.success('匹配成功，已生成匹配记录')
-}
-
-/* 撤销匹配：恢复双边余额并移除记录
-   TODO: 改为 POST /api/flowDetail/unmatch，成功后刷新列表 */
-function handleReverse(row) {
-  const idx = matchRecords.value.findIndex((r) => r === row || (r.no && r.no === row.no))
-  if (idx < 0) return
-  const rec = matchRecords.value[idx]
-  const w = waybills.value.find((x) => String(x.id) === rec.waybillNo)
-  const f = fundFlows.value.find((x) => String(x.id) === rec.flowNo)
-  if (w) {
-    w.matched = round2(w.matched - rec.amount)
-    w.remain = round2(w.remain + rec.amount)
-  }
-  if (f) {
-    f.matched = round2(f.matched - rec.amount)
-    f.remain = round2(f.remain + rec.amount)
-  }
-  matchRecords.value.splice(idx, 1)
-  ElMessage.success('已撤销匹配')
-}
-
-onMounted(loadData)
+onMounted(() => {
+  loadPlatforms()
+  loadData()
+})
 </script>
 
 <style scoped>
@@ -600,22 +668,12 @@ onMounted(loadData)
   gap: 16px;
 }
 
-/* ---------- 顶部工具条 ---------- */
-.flow-toolbar {
-  background: #fff;
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
-  padding: 12px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.toolbar-left {
+/* ---------- 顶部概览标题 ---------- */
+.overview-head {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 12px;
 }
 .toolbar-bar {
   width: 4px;
@@ -629,11 +687,20 @@ onMounted(loadData)
   letter-spacing: 1px;
   color: #1f2329;
 }
-.toolbar-right {
+
+/* 导入弹窗文件行 */
+.import-file-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+}
+.import-file-name {
+  font-size: 13px;
+  color: #4e5969;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ---------- 面板通用 ---------- */
@@ -641,13 +708,19 @@ onMounted(loadData)
   display: flex;
   gap: 16px;
   align-items: stretch;
+  /* 固定总高：两个面板等高，表格在剩余高度内滚动而不是撑高整页 */
+  height: 620px;
 }
 .flow-panels > .flow-panel {
   flex: 1 1 0;
   min-width: 0;
 }
-.flow-panels.bottom > .match-panel {
-  flex: 1.4 1 0;
+/* 左宽右窄：约 57 : 43 */
+.flow-panels > .panel-waybill {
+  flex: 1.15 1 0;
+}
+.flow-panels > .panel-cash {
+  flex: 0.85 1 0;
 }
 .flow-panel {
   background: #fff;
@@ -681,6 +754,19 @@ onMounted(loadData)
   padding: 12px 16px;
   flex: 1 1 auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 表格填满面板剩余高度，左右两表底部对齐 */
+.flex-table {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.waybill-search,
+.cash-search,
+.platform-tabs {
+  flex-shrink: 0;
 }
 
 /* 面单明细筛选表单 */
@@ -692,6 +778,31 @@ onMounted(loadData)
   margin-bottom: 8px;
 }
 .waybill-search :deep(.el-form-item__label) {
+  font-size: 12px;
+  color: #5a6577;
+  padding-right: 6px;
+}
+
+/* 平台 Tabs（紧凑） */
+.platform-tabs {
+  margin-bottom: 2px;
+}
+.platform-tabs :deep(.el-tabs__header) {
+  margin-bottom: 8px;
+}
+.platform-tabs :deep(.el-tabs__nav-wrap::after) {
+  height: 1px;
+}
+
+/* 资金流水筛选表单 */
+.cash-search {
+  margin-bottom: 4px;
+}
+.cash-search :deep(.el-form-item) {
+  margin-right: 12px;
+  margin-bottom: 8px;
+}
+.cash-search :deep(.el-form-item__label) {
   font-size: 12px;
   color: #5a6577;
   padding-right: 6px;
@@ -710,11 +821,38 @@ onMounted(loadData)
   color: #d46b08;
 }
 
-/* ---------- 今日挂/销账 ---------- */
+/* 可编辑单元格 */
+.cell-editable {
+  cursor: text;
+  width: 100%;
+  min-height: 20px;
+  line-height: 20px;
+  padding: 0 2px;
+  box-sizing: border-box;
+  border-bottom: 1px dashed #c0c4cc;
+  border-radius: 2px;
+}
+.cell-editable:hover {
+  background: #f0f6ff;
+  border-bottom-color: #1677ff;
+}
+.cell-edit-input {
+  width: 100%;
+}
+.cell-edit-input :deep(.el-input__inner) {
+  padding: 0 4px;
+  height: 22px;
+  line-height: 22px;
+  text-align: right;
+}
+.cell-edit-input.cell-edit-text :deep(.el-input__inner) {
+  text-align: left;
+}
+
+/* ---------- 今日挂账 ---------- */
 .stat-cards {
   display: flex;
   gap: 12px;
-  margin-bottom: 14px;
   flex-wrap: wrap;
 }
 .stat-card {
@@ -723,78 +861,35 @@ onMounted(loadData)
   background: #f8fafd;
   border: 1px solid #eef2f8;
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 .stat-label {
   font-size: 12.5px;
   color: #8a94a6;
-  margin-bottom: 6px;
 }
 .stat-val {
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.3px;
-}
-.stat-sub {
-  font-size: 12px;
-  color: #8a94a6;
-  margin-top: 4px;
-}
-.list-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #5a6577;
-  margin-bottom: 8px;
-}
-
-/* ---------- 明细匹配内容 ---------- */
-.match-tabs {
-  display: flex;
-  gap: 4px;
-  background: #f2f5f9;
-  padding: 3px;
-  border-radius: 7px;
-}
-.match-tab {
-  padding: 5px 14px;
-  border-radius: 5px;
-  font-size: 12.5px;
-  color: #5a6577;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  white-space: nowrap;
-}
-.match-tab:hover {
-  color: #1677ff;
-}
-.match-tab.active {
-  background: #fff;
-  color: #1677ff;
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(15, 35, 70, 0.14);
-}
-.empty-tip {
-  padding: 56px 24px;
-  text-align: center;
-  color: #8a94a6;
-  font-size: 13px;
-  line-height: 1.9;
-}
-.match-foot {
-  margin-top: 12px;
-  text-align: right;
-  font-size: 13px;
-  color: #5a6577;
 }
 
 /* ---------- 窄屏堆叠 ---------- */
 @media (max-width: 1200px) {
   .flow-panels {
     flex-direction: column;
+    height: auto;
   }
-  .flow-panels.bottom > .match-panel {
-    flex: 1 1 auto;
+  .flow-panels > .flow-panel {
+    flex: none;
+  }
+  .flex-table {
+    flex: none;
+    height: 420px;
   }
 }
 </style>
