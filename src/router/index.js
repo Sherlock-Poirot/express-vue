@@ -139,6 +139,18 @@ const routes = [
         component: () => import("../views/FundFlow.vue"),
         meta: { title: "资金流水" },
       },
+      {
+        path: "finance/recharge-flow",
+        name: "RechargeFlow",
+        component: () => import("../views/RechargeFlow.vue"),
+        meta: { title: "面单流水" },
+      },
+      {
+        path: "finance/cash-account",
+        name: "CashAccount",
+        component: () => import("../views/CashAccount.vue"),
+        meta: { title: "账户管理" },
+      },
       
       {
         path: "quality/fake-sign",
