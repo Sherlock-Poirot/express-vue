@@ -134,19 +134,19 @@ const routes = [
         meta: { title: "报销管理" },
       },
       {
-        path: "finance/fund-flow",
+        path: "finance/cashFlow",
         name: "FundFlow",
         component: () => import("../views/FundFlow.vue"),
         meta: { title: "资金流水" },
       },
       {
-        path: "finance/recharge-flow",
+        path: "finance/rechargeFlow",
         name: "RechargeFlow",
         component: () => import("../views/RechargeFlow.vue"),
         meta: { title: "面单流水" },
       },
       {
-        path: "finance/cash-account",
+        path: "finance/cashAccount",
         name: "CashAccount",
         component: () => import("../views/CashAccount.vue"),
         meta: { title: "账户管理" },
