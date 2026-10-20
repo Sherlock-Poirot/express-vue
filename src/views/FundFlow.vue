@@ -78,7 +78,21 @@
           <el-table-column type="selection" width="42" />
           <el-table-column prop="operateTime" label="操作时间" width="150" align="center" header-align="center" />
           <el-table-column prop="custName" label="客户名称" min-width="120" align="center" show-overflow-tooltip header-align="center" />
-          <el-table-column prop="category" label="类目" width="80" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column label="类目" width="90" align="center" show-overflow-tooltip header-align="center">
+            <template #default="{ row }">
+              <el-input
+                v-if="isEditing(row, 'category')"
+                v-model="editValue"
+                v-focus
+                size="small"
+                class="cell-edit-input cell-edit-text"
+                @keyup.enter="saveEdit(row)"
+                @keyup.esc="cancelEdit"
+                @blur="saveEdit(row)"
+              />
+              <div v-else class="cell-editable" title="点击编辑" @click="startEdit(row, 'category')">{{ row.category || '-' }}</div>
+            </template>
+          </el-table-column>
           <el-table-column label="金额" width="104" align="center" header-align="center">
             <template #default="{ row }">
               <span :class="row.actualType === 1 ? 'num-green' : 'num-orange'">
@@ -86,14 +100,49 @@
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="实际收支" width="80" align="center">
+          <el-table-column label="实际收支" width="92" align="center">
             <template #default="{ row }">
-              <el-tag :type="row.actualType === 1 ? 'success' : 'warning'" size="small" effect="plain">
+              <el-select
+                v-if="isEditing(row, 'actualType')"
+                v-model="editValue"
+                v-focus
+                size="small"
+                class="cell-edit-select"
+                @change="saveEdit(row)"
+                @keyup.esc="cancelEdit"
+                @blur="cancelEdit"
+              >
+                <el-option label="收入" :value="1" />
+                <el-option label="支出" :value="-1" />
+              </el-select>
+              <el-tag
+                v-else
+                :type="row.actualType === 1 ? 'success' : 'warning'"
+                size="small"
+                effect="plain"
+                class="cell-editable-tag"
+                title="点击编辑"
+                @click="startEdit(row, 'actualType')"
+              >
                 {{ row.actualType === 1 ? '收入' : '支出' }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="remark" label="备注" min-width="110" show-overflow-tooltip header-align="center" />
+          <el-table-column label="备注" min-width="110" show-overflow-tooltip header-align="center">
+            <template #default="{ row }">
+              <el-input
+                v-if="isEditing(row, 'remark')"
+                v-model="editValue"
+                v-focus
+                size="small"
+                class="cell-edit-input cell-edit-text"
+                @keyup.enter="saveEdit(row)"
+                @keyup.esc="cancelEdit"
+                @blur="saveEdit(row)"
+              />
+              <div v-else class="cell-editable" title="点击编辑" @click="startEdit(row, 'remark')">{{ row.remark || '-' }}</div>
+            </template>
+          </el-table-column>
           <el-table-column label="匹配状态" width="84" align="center" fixed="right">
             <template #default="{ row }">
               <el-tag :type="row.matchStatus === 1 ? 'success' : 'danger'" size="small" effect="light">
@@ -115,7 +164,7 @@
         </el-form-item>
         <el-form-item label="文件" required>
           <div class="import-file-row">
-            <el-upload :auto-upload="false" :show-file-list="false" accept=".xlsx,.xls" :on-change="onCashFileChange">
+            <el-upload :auto-upload="false" :show-file-list="false" accept=".xlsx,.xls,.csv" :on-change="onCashFileChange">
               <el-button>选择文件</el-button>
             </el-upload>
             <span v-if="cashImportForm.file" class="import-file-name">{{ cashImportForm.file.name }}</span>
@@ -155,6 +204,7 @@ const fmtDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getD
      GET  /api/flowDetail/cash/list       资金流水明细（支持筛选 + 账户 Tab）
      GET  /api/cashAccount/list           账户列表（Tab 与导入下拉数据源）
      POST /api/flowDetail/cash/import     资金流水导入
+     POST /api/flowDetail/cash/update     资金流水行内编辑保存
    ========================================================= */
 const cashLoading = ref(false)
 const fundFlows = ref([])
@@ -332,6 +382,69 @@ const doBatchDelete = async () => {
   }
 }
 
+/* 行内编辑（类目 / 实际收支 / 备注） */
+const editCell = ref({ id: null, field: '' })
+const editValue = ref('')
+
+const isEditing = (row, field) => editCell.value.id === row.id && editCell.value.field === field
+
+const vFocus = {
+  mounted: (el) => el.querySelector('input')?.focus()
+}
+
+const startEdit = (row, field) => {
+  editCell.value = { id: row.id, field }
+  editValue.value = field === 'actualType' ? row[field] : String(row[field] ?? '')
+}
+
+const cancelEdit = () => {
+  editCell.value = { id: null, field: '' }
+}
+
+const saveEdit = async (row) => {
+  const { field } = editCell.value
+  if (!field || editCell.value.id !== row.id) return
+
+  let val = editValue.value
+  if (field === 'actualType') {
+    val = Number(val)
+    if (val !== 1 && val !== -1) {
+      cancelEdit()
+      return
+    }
+  } else {
+    val = String(val ?? '').trim()
+  }
+
+  cancelEdit()
+
+  if (val === row[field]) return
+
+  try {
+    // 后端 update 校验要求 custName/amount/actualType/markType 非空，一并带上
+    const payload = {
+      id: row.id,
+      custName: row.custName,
+      amount: row.amount,
+      actualType: row.actualType,
+      markType: row.markType,
+      category: row.category,
+      remark: row.remark,
+      [field]: val
+    }
+    const res = await axios.post('/api/flowDetail/cash/update', payload)
+    if (res.data.code === 200) {
+      row[field] = val
+      ElMessage.success('已保存')
+    } else {
+      ElMessage.error(res.data.message || '保存失败')
+    }
+  } catch (err) {
+    console.error('保存资金流水失败:', err)
+    ElMessage.error(err.response?.data?.message || '保存失败')
+  }
+}
+
 /* =========================================================
    派生数据
    ========================================================= */
@@ -455,5 +568,45 @@ onMounted(() => {
 }
 .num-orange {
   color: #d46b08;
+}
+
+/* 可编辑单元格 */
+.cell-editable {
+  cursor: text;
+  width: 100%;
+  min-height: 20px;
+  padding: 0 2px;
+  border-bottom: 1px dashed transparent;
+  border-radius: 2px;
+}
+.cell-editable:hover {
+  background: #f0f6ff;
+  border-bottom-color: #1677ff;
+}
+.cell-editable-tag {
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+}
+.cell-editable-tag:hover {
+  border-bottom-color: #1677ff;
+}
+.cell-edit-input {
+  width: 100%;
+}
+.cell-edit-input :deep(.el-input__inner) {
+  padding: 0 4px;
+  height: 22px;
+  line-height: 22px;
+  text-align: right;
+}
+.cell-edit-input.cell-edit-text :deep(.el-input__inner) {
+  text-align: left;
+}
+.cell-edit-select {
+  width: 100%;
+}
+.cell-edit-select :deep(.el-select__wrapper) {
+  min-height: 22px;
+  padding: 0 4px;
 }
 </style>

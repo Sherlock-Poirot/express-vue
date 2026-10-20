@@ -29,7 +29,7 @@
         <div style="display:flex; gap:8px; align-items:center">
           <el-upload
             :show-file-list="false"
-            accept=".xlsx,.xls"
+            accept=".xlsx,.xls,.csv"
             :http-request="doWaybillImport"
           >
             <el-button type="primary" :loading="importing">导入</el-button>
