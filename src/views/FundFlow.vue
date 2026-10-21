@@ -61,6 +61,7 @@
             <el-button @click="resetCashSearch">重置</el-button>
             <el-button type="primary" plain @click="openCashImport">导入</el-button>
             <el-button type="danger" :disabled="selectedFlows.length === 0" @click="doBatchDelete">删除</el-button>
+            <el-button type="success" :disabled="selectedUnmatchedFlows.length === 0" @click="openMatchModal">匹配</el-button>
           </el-form-item>
         </el-form>
 
@@ -76,6 +77,17 @@
           @selection-change="onFlowSelect"
         >
           <el-table-column type="selection" width="42" />
+          <el-table-column label="操作" width="68" align="center">
+            <template #default="{ row }">
+              <el-button
+                type="success"
+                size="small"
+                plain
+                :disabled="row.matchStatus === 1"
+                @click="openMatchModalForRow(row)"
+              >匹配</el-button>
+            </template>
+          </el-table-column>
           <el-table-column prop="operateTime" label="操作时间" width="150" align="center" header-align="center" />
           <el-table-column prop="custName" label="客户名称" min-width="120" align="center" show-overflow-tooltip header-align="center" />
           <el-table-column label="类目" width="90" align="center" show-overflow-tooltip header-align="center">
@@ -176,6 +188,76 @@
         <el-button type="primary" :loading="cashImporting" @click="doCashImport">开始导入</el-button>
       </template>
     </el-dialog>
+
+    <!-- 匹配弹窗：资金流水匹配面单明细（与面单页匹配互为反向） -->
+    <el-dialog v-model="matchVisible" title="资金流水匹配面单流水" width="1200px" top="6vh" :close-on-click-modal="false">
+      <!-- 上半部分：待匹配资金流水 -->
+      <div class="match-section">
+        <div class="match-section-title">待匹配资金流水（{{ matchTargetFlows.length }} 笔）</div>
+        <el-table :data="matchTargetFlows" size="small" border height="180" class="match-table">
+          <el-table-column prop="operateTime" label="操作时间" width="150" align="center" header-align="center" />
+          <el-table-column prop="custName" label="客户名称" min-width="120" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="category" label="类目" width="90" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column label="金额" width="104" align="center" header-align="center">
+            <template #default="{ row }">
+              <span :class="row.actualType === 1 ? 'num-green' : 'num-orange'">
+                {{ row.actualType === 1 ? '+' : '-' }}¥{{ fmt(row.amount) }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="remark" label="备注" min-width="110" show-overflow-tooltip header-align="center" />
+        </el-table>
+      </div>
+
+      <!-- 下半部分：未匹配面单明细 -->
+      <div class="match-section">
+        <div class="match-section-title">未匹配面单明细</div>
+        <!-- 金额筛选（前端过滤当前列表，相同金额的面单整行标红） -->
+        <div class="match-filter">
+          <span class="match-filter-label">金额</span>
+          <el-input v-model="matchAmountMin" placeholder="最小" clearable style="width: 90px" />
+          <span style="color: #c0c4cc">-</span>
+          <el-input v-model="matchAmountMax" placeholder="最大" clearable style="width: 90px" />
+          <span class="same-amount-tip">红色行为与资金流水金额相同的面单</span>
+        </div>
+        <el-table
+          ref="matchWaybillTableRef"
+          :data="filteredMatchWaybills"
+          v-loading="matchLoading"
+          size="small"
+          border
+          height="320"
+          class="match-table"
+          row-key="id"
+          :row-class-name="matchWaybillRowClass"
+          @selection-change="onMatchWaybillSelect"
+        >
+          <el-table-column type="selection" width="42" />
+          <el-table-column prop="fromCustName" label="来源客户" min-width="110" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="toCustName" label="目的客户" min-width="100" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="operateType" label="操作类型" width="76" align="center" header-align="center" />
+          <el-table-column prop="operateQty" label="数量" width="60" align="center" header-align="center" />
+          <el-table-column prop="unitPrice" label="单价" width="80" align="center" header-align="center">
+            <template #default="{ row }">{{ fmt(row.unitPrice) }}</template>
+          </el-table-column>
+          <el-table-column label="金额" width="96" align="center" header-align="center">
+            <template #default="{ row }">
+              <span :class="isSameAmount(row) ? 'num-red' : 'num-blue'">¥{{ fmt(row.amount) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="payType" label="支付方式" width="92" align="center" header-align="center" />
+          <el-table-column prop="remark" label="备注" min-width="110" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="operateTime" label="操作时间" width="150" align="center" header-align="center" />
+        </el-table>
+      </div>
+
+      <template #footer>
+        <el-button @click="matchVisible = false">取消</el-button>
+        <el-button type="success" :loading="matchSubmitting" :disabled="matchSelectedWaybills.length === 0" @click="doMatch">
+          确认匹配
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -205,6 +287,8 @@ const fmtDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getD
      GET  /api/cashAccount/list           账户列表（Tab 与导入下拉数据源）
      POST /api/flowDetail/cash/import     资金流水导入
      POST /api/flowDetail/cash/update     资金流水行内编辑保存
+     GET  /api/flowDetail/recharge/list   未匹配面单（匹配弹窗）
+     POST /api/flowDetail/match           资金流水匹配面单
    ========================================================= */
 const cashLoading = ref(false)
 const fundFlows = ref([])
@@ -379,6 +463,120 @@ const doBatchDelete = async () => {
   } catch (err) {
     console.error('删除资金流水明细失败:', err)
     ElMessage.error(err.response?.data?.message || '删除失败')
+  }
+}
+
+/* =========================================================
+   匹配弹窗（资金流水 → 面单，与面单页匹配互为反向）
+   注意：/flowDetail/match 的 rechargeIds 传面单id、cashIds 传资金流水id，勿颠倒
+   ========================================================= */
+const matchVisible = ref(false)
+const matchLoading = ref(false)
+const matchSubmitting = ref(false)
+const matchWaybills = ref([])           // 未匹配面单明细
+const matchSelectedWaybills = ref([])   // 弹窗内勾选的面单
+const matchWaybillTableRef = ref(null)
+const matchTargetFlows = ref([])        // 本次要匹配的资金流水（表头按钮=勾选的未匹配行；行内按钮=该行）
+const matchAmountMin = ref('')          // 弹窗内面单金额筛选
+const matchAmountMax = ref('')
+
+/* 可参与匹配的选中行：仅未匹配（已匹配的不允许重复匹配） */
+const selectedUnmatchedFlows = computed(
+  () => selectedFlows.value.filter((f) => f.matchStatus !== 1)
+)
+
+/* 拉取未匹配面单明细 */
+const getMatchWaybills = async () => {
+  matchLoading.value = true
+  try {
+    const res = await axios.get('/api/flowDetail/recharge/list', { params: { matchStatus: 0 } })
+    matchWaybills.value = (res.data.data || []).map((r) => ({
+      ...r,
+      amount: Number(r.amount || 0),
+      operateTime: fmtDateTime(r.operateTime)
+    }))
+  } catch (err) {
+    console.error('获取未匹配面单明细失败:', err)
+  } finally {
+    matchLoading.value = false
+  }
+}
+
+/* 打开匹配弹窗（表头按钮入口） */
+const openMatchModal = () => {
+  if (selectedFlows.value.length === 0) {
+    ElMessage.warning('请先选择要匹配的资金流水')
+    return
+  }
+  if (selectedUnmatchedFlows.value.length === 0) {
+    ElMessage.warning('选中的资金流水均已匹配，不能重复匹配')
+    return
+  }
+  matchTargetFlows.value = [...selectedUnmatchedFlows.value]
+  openMatchDialog()
+}
+
+/* 行内匹配按钮入口：直接对该行打开弹窗，无需先勾选 */
+const openMatchModalForRow = (row) => {
+  if (row.matchStatus === 1) return
+  matchTargetFlows.value = [row]
+  openMatchDialog()
+}
+
+const openMatchDialog = () => {
+  matchVisible.value = true
+  matchWaybills.value = []
+  matchSelectedWaybills.value = []
+  matchAmountMin.value = ''
+  matchAmountMax.value = ''
+  getMatchWaybills()
+}
+
+const onMatchWaybillSelect = (rows) => {
+  matchSelectedWaybills.value = rows
+}
+
+/* 弹窗内金额筛选（前端过滤，输入非数字时不过滤） */
+const filteredMatchWaybills = computed(() => {
+  const min = matchAmountMin.value === '' ? null : Number(matchAmountMin.value)
+  const max = matchAmountMax.value === '' ? null : Number(matchAmountMax.value)
+  return matchWaybills.value.filter((w) => {
+    if (min !== null && !isNaN(min) && w.amount < min) return false
+    if (max !== null && !isNaN(max) && w.amount > max) return false
+    return true
+  })
+})
+
+/* 与待匹配资金流水金额相同的面单标红（多笔流水时命中任意一笔金额即标记） */
+const matchAmountSet = computed(
+  () => new Set(matchTargetFlows.value.map((f) => round2(f.amount)))
+)
+const isSameAmount = (row) => matchAmountSet.value.has(round2(row.amount))
+const matchWaybillRowClass = ({ row }) => (isSameAmount(row) ? 'same-amount-row' : '')
+
+/* 确认匹配：rechargeIds=弹窗内勾选的面单，cashIds=待匹配资金流水（与面单页相反） */
+const doMatch = async () => {
+  if (matchSelectedWaybills.value.length === 0) {
+    ElMessage.warning('请选择要匹配的面单明细')
+    return
+  }
+  const rechargeIds = matchSelectedWaybills.value.map((w) => w.id)
+  const cashIds = matchTargetFlows.value.map((f) => f.id)
+  matchSubmitting.value = true
+  try {
+    const res = await axios.post('/api/flowDetail/match', { rechargeIds, cashIds })
+    if (res.data.code === 200) {
+      ElMessage.success('匹配成功')
+      matchVisible.value = false
+      getCashList()
+    } else {
+      ElMessage.error(res.data.message || '匹配失败')
+    }
+  } catch (err) {
+    console.error('匹配失败:', err)
+    ElMessage.error(err.response?.data?.message || '匹配失败')
+  } finally {
+    matchSubmitting.value = false
   }
 }
 
@@ -608,5 +806,58 @@ onMounted(() => {
 .cell-edit-select :deep(.el-select__wrapper) {
   min-height: 22px;
   padding: 0 4px;
+}
+
+.num-blue {
+  color: #1259c3;
+  font-weight: 600;
+}
+.num-red {
+  color: #cf1322;
+  font-weight: 700;
+}
+
+/* 匹配弹窗 */
+.match-section {
+  margin-bottom: 16px;
+}
+.match-section:last-child {
+  margin-bottom: 0;
+}
+.match-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 8px;
+  padding-left: 8px;
+  border-left: 3px solid #67c23a;
+}
+.match-table {
+  width: 100%;
+}
+
+/* 匹配弹窗金额筛选行 */
+.match-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.match-filter-label {
+  font-size: 13px;
+  color: #5a6577;
+}
+.same-amount-tip {
+  font-size: 12px;
+  color: #cf1322;
+  margin-left: 8px;
+}
+
+/* 与资金流水金额相同的面单整行标红 */
+.match-table :deep(.same-amount-row td.el-table__cell) {
+  background-color: #fff1f0;
+}
+.match-table :deep(.same-amount-row:hover td.el-table__cell) {
+  background-color: #ffe4e2;
 }
 </style>

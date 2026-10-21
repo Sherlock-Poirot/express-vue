@@ -91,7 +91,7 @@
           @selection-change="onWaybillSelect"
         >
           <el-table-column type="selection" width="42" fixed />
-          <el-table-column label="匹配" width="64" align="center">
+          <el-table-column label="操作" width="68" align="center">
             <template #default="{ row }">
               <el-button
                 type="success"
