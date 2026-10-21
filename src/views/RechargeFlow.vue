@@ -91,13 +91,24 @@
           @selection-change="onWaybillSelect"
         >
           <el-table-column type="selection" width="42" fixed />
+          <el-table-column label="匹配" width="64" align="center">
+            <template #default="{ row }">
+              <el-button
+                type="success"
+                size="small"
+                plain
+                :disabled="row.matchStatus === 1"
+                @click="openMatchModalForRow(row)"
+              >匹配</el-button>
+            </template>
+          </el-table-column>
           <el-table-column prop="fromCustName" label="来源客户" min-width="110" show-overflow-tooltip header-align="center" />
           <el-table-column prop="toShopName" label="目的店铺" min-width="100" show-overflow-tooltip header-align="center" />
           <el-table-column prop="toCustName" label="目的客户" min-width="100" show-overflow-tooltip header-align="center" />
-          <el-table-column prop="operateType" label="操作类型" width="76" header-align="center" />
-          <el-table-column prop="rechargePlatform" label="充值平台" width="76" show-overflow-tooltip header-align="center" />
-          <el-table-column prop="operateQty" label="数量" width="60" align="right" header-align="center" class-name="num-col" />
-          <el-table-column label="单价" width="80" align="right" header-align="center" class-name="num-col">
+          <el-table-column prop="operateType" label="操作类型" width="76" align="center" header-align="center" />
+          <el-table-column prop="rechargePlatform" label="充值平台" width="76" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="operateQty" label="数量" width="60" align="center" header-align="center" class-name="num-col" />
+          <el-table-column label="单价" width="80" align="center" header-align="center" class-name="num-col">
             <template #default="{ row }">
               <el-input
                 v-if="isEditing(row, 'unitPrice')"
@@ -112,7 +123,7 @@
               <div v-else class="cell-editable" title="点击编辑" @click="startEdit(row, 'unitPrice')">{{ fmt(row.unitPrice) }}</div>
             </template>
           </el-table-column>
-          <el-table-column label="金额" width="88" align="right" header-align="center" class-name="num-col">
+          <el-table-column label="金额" width="88" align="center" header-align="center" class-name="num-col">
             <template #default="{ row }">
               <el-input
                 v-if="isEditing(row, 'amount')"
@@ -127,7 +138,7 @@
               <div v-else class="cell-editable num-blue" title="点击编辑" @click="startEdit(row, 'amount')">¥{{ fmt(row.amount) }}</div>
             </template>
           </el-table-column>
-          <el-table-column label="支付方式" width="92" header-align="center">
+          <el-table-column label="支付方式" width="92" align="center" header-align="center">
             <template #default="{ row }">
               <el-input
                 v-if="isEditing(row, 'payType')"
@@ -171,21 +182,23 @@
 
     <!-- ================= 匹配弹窗 ================= -->
     <el-dialog v-model="matchVisible" title="面单流水匹配资金流水" width="1200px" top="6vh" :close-on-click-modal="false">
-      <!-- 上半部分：已选面单明细 -->
+      <!-- 上半部分：待匹配面单明细 -->
       <div class="match-section">
-        <div class="match-section-title">已选面单明细（{{ selectedUnmatched.length }} 笔）</div>
-        <el-table :data="selectedUnmatched" size="small" border height="180" class="match-table">
-          <el-table-column prop="fromCustName" label="来源客户" min-width="110" show-overflow-tooltip header-align="center" />
-          <el-table-column prop="toShopName" label="目的店铺" min-width="100" show-overflow-tooltip header-align="center" />
-          <el-table-column prop="operateType" label="操作类型" width="76" header-align="center" />
-          <el-table-column prop="operateQty" label="数量" width="60" align="right" header-align="center" />
-          <el-table-column prop="unitPrice" label="单价" width="80" align="right" header-align="center">
+        <div class="match-section-title">待匹配面单明细（{{ matchTargetWaybills.length }} 笔）</div>
+        <el-table :data="matchTargetWaybills" size="small" border height="180" class="match-table">
+          <el-table-column prop="fromCustName" label="来源客户" min-width="110" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="toShopName" label="目的店铺" min-width="100" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="toCustName" label="目的客户" min-width="100" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="operateType" label="操作类型" width="76" align="center" header-align="center" />
+          <el-table-column prop="operateQty" label="数量" width="60" align="center" header-align="center" />
+          <el-table-column prop="unitPrice" label="单价" width="80" align="center" header-align="center">
             <template #default="{ row }">{{ fmt(row.unitPrice) }}</template>
           </el-table-column>
-          <el-table-column prop="amount" label="金额" width="88" align="right" header-align="center">
+          <el-table-column prop="amount" label="金额" width="88" align="center" header-align="center">
             <template #default="{ row }">¥{{ fmt(row.amount) }}</template>
           </el-table-column>
-          <el-table-column prop="operateTime" label="操作时间" width="150" header-align="center" />
+          <el-table-column prop="remark" label="备注" min-width="100" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="operateTime" label="操作时间" width="150" align="center" header-align="center" />
         </el-table>
       </div>
 
@@ -196,24 +209,33 @@
           <el-tab-pane label="全部" name="all" />
           <el-tab-pane v-for="a in accounts" :key="a.id" :label="a.accountName" :name="String(a.id)" />
         </el-tabs>
+        <!-- 金额筛选（前端过滤当前列表，相同金额的流水整行标红） -->
+        <div class="match-filter">
+          <span class="match-filter-label">金额</span>
+          <el-input v-model="matchAmountMin" placeholder="最小" clearable style="width: 90px" />
+          <span style="color: #c0c4cc">-</span>
+          <el-input v-model="matchAmountMax" placeholder="最大" clearable style="width: 90px" />
+          <span class="same-amount-tip">红色行为与面单金额相同的流水</span>
+        </div>
         <el-table
           ref="matchFlowTableRef"
-          :data="matchFlows"
+          :data="filteredMatchFlows"
           v-loading="matchLoading"
           size="small"
           border
           height="320"
           class="match-table"
           row-key="id"
+          :row-class-name="matchFlowRowClass"
           @selection-change="onMatchFlowSelect"
         >
           <el-table-column type="selection" width="42" />
-          <el-table-column prop="operateTime" label="操作时间" width="150" header-align="center" />
-          <el-table-column prop="custName" label="客户名称" min-width="120" show-overflow-tooltip header-align="center" />
-          <el-table-column prop="category" label="类目" width="100" show-overflow-tooltip header-align="center" />
-          <el-table-column label="金额" width="104" align="right" header-align="center">
+          <el-table-column prop="operateTime" label="操作时间" width="150" align="center" header-align="center" />
+          <el-table-column prop="custName" label="客户名称" min-width="120" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column prop="category" label="类目" width="100" align="center" show-overflow-tooltip header-align="center" />
+          <el-table-column label="金额" width="104" align="center" header-align="center">
             <template #default="{ row }">
-              <span :class="row.actualType === 1 ? 'num-green' : 'num-orange'">
+              <span :class="isSameAmount(row) ? 'num-red' : (row.actualType === 1 ? 'num-green' : 'num-orange')">
                 {{ row.actualType === 1 ? '+' : '-' }}¥{{ fmt(row.amount) }}
               </span>
             </template>
@@ -405,6 +427,9 @@ const matchFlows = ref([])            // 未匹配收入资金流水
 const matchSelectedFlows = ref([])    // 弹窗内勾选的资金流水
 const matchFlowTableRef = ref(null)
 const matchActiveAccount = ref('all') // 弹窗内账户 Tab（'all' 或账户id）
+const matchTargetWaybills = ref([])   // 本次要匹配的面单（表头按钮=勾选的未匹配行；行内按钮=该行）
+const matchAmountMin = ref('')        // 弹窗内资金流水金额筛选
+const matchAmountMax = ref('')
 
 /* 自动匹配：无需选中，服务端自动按规则匹配所有未匹配数据 */
 const autoMatching = ref(false)
@@ -459,7 +484,7 @@ const getMatchFlows = async () => {
   }
 }
 
-/* 打开匹配弹窗：校验选中 + 拉取未匹配收入流水 */
+/* 打开匹配弹窗：校验选中 + 拉取未匹配收入流水（表头按钮入口） */
 const openMatchModal = () => {
   if (selectedWaybills.value.length === 0) {
     ElMessage.warning('请先选择要匹配的面单明细')
@@ -469,12 +494,44 @@ const openMatchModal = () => {
     ElMessage.warning('选中的面单均已匹配，不能重复匹配')
     return
   }
+  matchTargetWaybills.value = [...selectedUnmatched.value]
+  openMatchDialog()
+}
+
+/* 行内匹配按钮入口：直接对该行打开弹窗，无需先勾选 */
+const openMatchModalForRow = (row) => {
+  if (row.matchStatus === 1) return
+  matchTargetWaybills.value = [row]
+  openMatchDialog()
+}
+
+const openMatchDialog = () => {
   matchVisible.value = true
   matchFlows.value = []
   matchSelectedFlows.value = []
   matchActiveAccount.value = 'all'
+  matchAmountMin.value = ''
+  matchAmountMax.value = ''
   getMatchFlows()
 }
+
+/* 弹窗内金额筛选（前端过滤，输入非数字时不过滤） */
+const filteredMatchFlows = computed(() => {
+  const min = matchAmountMin.value === '' ? null : Number(matchAmountMin.value)
+  const max = matchAmountMax.value === '' ? null : Number(matchAmountMax.value)
+  return matchFlows.value.filter((f) => {
+    if (min !== null && !isNaN(min) && f.amount < min) return false
+    if (max !== null && !isNaN(max) && f.amount > max) return false
+    return true
+  })
+})
+
+/* 与待匹配面单金额相同的流水标红（多笔面单时命中任意一笔金额即标记） */
+const matchAmountSet = computed(
+  () => new Set(matchTargetWaybills.value.map((w) => round2(w.amount)))
+)
+const isSameAmount = (row) => matchAmountSet.value.has(round2(row.amount))
+const matchFlowRowClass = ({ row }) => (isSameAmount(row) ? 'same-amount-row' : '')
 
 const onMatchFlowSelect = (rows) => {
   matchSelectedFlows.value = rows
@@ -524,7 +581,7 @@ const doMatch = async () => {
     ElMessage.warning('请选择要匹配的资金流水')
     return
   }
-  const rechargeIds = selectedUnmatched.value.map((w) => w.id)
+  const rechargeIds = matchTargetWaybills.value.map((w) => w.id)
   const cashIds = matchSelectedFlows.value.map((f) => f.id)
   matchSubmitting.value = true
   try {
@@ -732,6 +789,10 @@ onMounted(() => {
 .num-orange {
   color: #d46b08;
 }
+.num-red {
+  color: #cf1322;
+  font-weight: 700;
+}
 
 /* 可编辑单元格 */
 .cell-editable {
@@ -761,7 +822,7 @@ onMounted(() => {
   padding: 0 4px;
   height: 22px;
   line-height: 22px;
-  text-align: right;
+  text-align: center;
 }
 .cell-edit-input.cell-edit-text :deep(.el-input__inner) {
   text-align: left;
@@ -819,5 +880,30 @@ onMounted(() => {
 }
 .match-table {
   width: 100%;
+}
+
+/* 匹配弹窗金额筛选行 */
+.match-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.match-filter-label {
+  font-size: 13px;
+  color: #5a6577;
+}
+.same-amount-tip {
+  font-size: 12px;
+  color: #cf1322;
+  margin-left: 8px;
+}
+
+/* 与面单金额相同的资金流水整行标红 */
+.match-table :deep(.same-amount-row td.el-table__cell) {
+  background-color: #fff1f0;
+}
+.match-table :deep(.same-amount-row:hover td.el-table__cell) {
+  background-color: #ffe4e2;
 }
 </style>
